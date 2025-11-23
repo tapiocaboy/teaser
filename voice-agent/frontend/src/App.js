@@ -6,6 +6,72 @@ import ParticleBackground from './components/ParticleBackground';
 import './App.css';
 
 const THEME_CONFIGS = {
+  synthwave: {
+    palette: {
+      mode: 'dark',
+      primary: { main: '#ff006e', dark: '#d6005c', light: '#ff3385' },
+      secondary: { main: '#8338ec', dark: '#6a2cc4', light: '#9d5ff0' },
+      background: { default: '#0f0820', paper: 'rgba(15, 8, 32, 0.9)' },
+      text: { primary: '#ffbe0b', secondary: 'rgba(255, 190, 11, 0.7)' },
+    },
+    typography: {
+      fontFamily: '"Space Grotesk", "Orbitron", "Roboto", sans-serif',
+      h4: { fontWeight: 700, letterSpacing: '2px' },
+      button: { letterSpacing: '1.5px' },
+    },
+    components: {
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'linear-gradient(145deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '20px',
+            border: '2px solid rgba(255, 0, 110, 0.3)',
+            boxShadow: '0 0 40px rgba(255, 0, 110, 0.2)',
+          },
+        },
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: '999px',
+            textTransform: 'uppercase',
+            fontWeight: 700,
+            letterSpacing: 2,
+            boxShadow: '0 0 25px rgba(255, 0, 110, 0.4)',
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': {
+              boxShadow: '0 0 35px rgba(255, 0, 110, 0.6)',
+              transform: 'translateY(-2px)',
+            },
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            backdropFilter: 'blur(20px)',
+            borderRadius: '20px',
+            border: '2px solid rgba(131, 56, 236, 0.3)',
+            boxShadow: '0 0 40px rgba(131, 56, 236, 0.25)',
+          },
+        },
+      },
+      MuiLinearProgress: {
+        styleOverrides: {
+          root: {
+            borderRadius: '999px',
+            backgroundColor: 'rgba(255, 0, 110, 0.2)',
+            border: '1px solid rgba(255, 0, 110, 0.3)',
+          },
+          bar: {
+            borderRadius: '999px',
+            background: 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)',
+          },
+        },
+      },
+    },
+  },
   neon: {
     palette: {
       mode: 'dark',
@@ -147,17 +213,35 @@ const THEME_CONFIGS = {
 };
 
 function App() {
-  const [themeName, setThemeName] = useState('neon');
+  // Load theme from localStorage or default to 'neon'
+  const [themeName, setThemeName] = useState(() => {
+    const savedTheme = localStorage.getItem('voiceAgentTheme');
+    return savedTheme && THEME_CONFIGS[savedTheme] ? savedTheme : 'neon';
+  });
+  
   const theme = useMemo(
     () => createTheme(THEME_CONFIGS[themeName] || THEME_CONFIGS.neon),
     [themeName]
   );
+
+  // Save theme to localStorage when it changes
+  const handleThemeChange = React.useCallback((newTheme) => {
+    setThemeName(newTheme);
+    localStorage.setItem('voiceAgentTheme', newTheme);
+  }, []);
 
   // Apply body background color based on theme
   React.useEffect(() => {
     if (themeName === 'dsp') {
       document.body.style.backgroundColor = '#000000';
       document.body.style.backgroundImage = 'none';
+    } else if (themeName === 'synthwave') {
+      document.body.style.backgroundColor = '#0f0820';
+      document.body.style.backgroundImage = `
+        radial-gradient(circle at 15% 15%, rgba(255, 0, 110, 0.15), transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(131, 56, 236, 0.18), transparent 35%),
+        radial-gradient(circle at 50% 85%, rgba(58, 134, 255, 0.12), transparent 40%)
+      `;
     } else {
       document.body.style.backgroundColor = '#01010b';
       document.body.style.backgroundImage = `
@@ -171,7 +255,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {themeName !== 'dsp' && <ParticleBackground />}
+      {themeName !== 'dsp' && <ParticleBackground themeName={themeName} />}
       <Container maxWidth="lg">
         <Box
           sx={{
@@ -183,7 +267,7 @@ function App() {
             zIndex: 1,
           }}
         >
-          <VoiceInterface themeName={themeName} onThemeChange={setThemeName} />
+          <VoiceInterface themeName={themeName} onThemeChange={handleThemeChange} />
         </Box>
       </Container>
     </ThemeProvider>

@@ -45,9 +45,45 @@ const INITIAL_VISUALIZER_STATE = {
 const THEME_CHOICES = [
   { value: 'neon', label: 'Neon Pulse' },
   { value: 'dsp', label: 'DSP Matrix' },
+  { value: 'synthwave', label: 'Synthwave Dream' },
 ];
 
 const themeStyles = {
+  synthwave: {
+    textGradient: 'linear-gradient(135deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%)',
+    panelBg: 'linear-gradient(145deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))',
+    panelBorder: '2px solid rgba(255, 0, 110, 0.4)',
+    panelOverlay: 'radial-gradient(circle at 25% 25%, rgba(255,0,110,0.1), transparent 50%)',
+    startGradient: 'linear-gradient(135deg, #ff006e 0%, #8338ec 100%)',
+    startHover: 'linear-gradient(135deg, #ff3385 0%, #9d5ff0 100%)',
+    startColor: '#ffbe0b',
+    startShadow: '0 0 30px rgba(255, 0, 110, 0.6)',
+    listeningGradient: 'linear-gradient(135deg, #ff006e 0%, #fb5607 100%)',
+    listeningShadow: '0 0 30px rgba(255, 0, 110, 0.6)',
+    listeningText: '#ffbe0b',
+    stopGradient: 'linear-gradient(135deg, #8338ec 0%, #3a86ff 100%)',
+    stopHover: 'linear-gradient(135deg, #9d5ff0 0%, #5ca3ff 100%)',
+    stopShadow: '0 0 30px rgba(131, 56, 236, 0.6)',
+    progressTrack: 'rgba(255, 0, 110, 0.2)',
+    progressBar: 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)',
+    summaryBg: 'linear-gradient(135deg, rgba(255,0,110,0.15), rgba(131,56,236,0.15))',
+    summaryBorder: '2px solid rgba(255, 0, 110, 0.3)',
+    cardBg: 'linear-gradient(150deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))',
+    cardBorder: '2px solid rgba(131, 56, 236, 0.3)',
+    transcriptBg: 'linear-gradient(135deg, rgba(255,0,110,0.15), rgba(131,56,236,0.1))',
+    transcriptBorder: '2px solid rgba(255, 0, 110, 0.3)',
+    transcriptAccent: '#ff006e',
+    responseBg: 'linear-gradient(135deg, rgba(131,56,236,0.15), rgba(58,134,255,0.1))',
+    responseBorder: '2px solid rgba(131, 56, 236, 0.3)',
+    responseAccent: '#8338ec',
+    historyBorder: '2px solid rgba(255, 0, 110, 0.5)',
+    historyBg: 'rgba(15,8,32,0.9)',
+    historyHoverBg: 'rgba(255, 0, 110, 0.15)',
+    historyHoverBorder: '2px solid #ff006e',
+    historyHoverShadow: '0 0 30px rgba(255, 0, 110, 0.4)',
+    textShadow: '0 0 20px rgba(255, 0, 110, 0.4)',
+    bodyTextShadow: '0 0 15px rgba(131, 56, 236, 0.3)',
+  },
   neon: {
     textGradient: 'linear-gradient(120deg, #7CFC00 0%, #1e88e5 45%, #8e24aa 85%)',
     panelBg: 'linear-gradient(145deg, rgba(4, 2, 14, 0.85), rgba(13, 32, 61, 0.95))',
@@ -442,33 +478,77 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
     setShowHistory(!showHistory);
   };
 
-  const InsightCard = ({ icon, title, value, footer, gradient }) => (
-    <Box
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        background: themeName === 'dsp' ? '#000000' : (gradient || 'linear-gradient(145deg, rgba(3,7,18,0.9), rgba(11,25,48,0.95))'),
-        border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.2)',
-        boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.3)' : '0 15px 40px rgba(3,7,18,0.55)',
-        minHeight: 140,
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        {React.cloneElement(icon, { sx: { color: themeName === 'dsp' ? '#39FF14' : icon.props.sx?.color } })}
-        <Typography variant="subtitle2" sx={{ letterSpacing: 1, color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD' }}>
-          {title}
+  const InsightCard = ({ icon, title, value, footer, gradient }) => {
+    const cardBg = themeName === 'dsp' 
+      ? '#000000' 
+      : themeName === 'synthwave'
+      ? 'linear-gradient(145deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))'
+      : (gradient || 'linear-gradient(145deg, rgba(3,7,18,0.9), rgba(11,25,48,0.95))');
+    
+    const cardBorder = themeName === 'dsp' 
+      ? '1px solid #39FF14' 
+      : themeName === 'synthwave'
+      ? '2px solid rgba(255, 0, 110, 0.4)'
+      : '1px solid rgba(124, 252, 0, 0.2)';
+    
+    const cardShadow = themeName === 'dsp' 
+      ? '0 0 20px rgba(57, 255, 20, 0.3)' 
+      : themeName === 'synthwave'
+      ? '0 0 30px rgba(255, 0, 110, 0.3)'
+      : '0 15px 40px rgba(3,7,18,0.55)';
+    
+    const iconColor = themeName === 'dsp' 
+      ? '#39FF14' 
+      : themeName === 'synthwave'
+      ? '#ff006e'
+      : icon.props.sx?.color;
+    
+    const titleColor = themeName === 'dsp' 
+      ? '#39FF14' 
+      : themeName === 'synthwave'
+      ? '#ffbe0b'
+      : '#E3F2FD';
+    
+    const valueColor = themeName === 'dsp' 
+      ? '#39FF14' 
+      : themeName === 'synthwave'
+      ? '#ff006e'
+      : '#7CFC00';
+    
+    const footerColor = themeName === 'dsp' 
+      ? '#39FF14' 
+      : themeName === 'synthwave'
+      ? '#8338ec'
+      : 'rgba(227, 242, 253, 0.7)';
+
+    return (
+      <Box
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          background: cardBg,
+          border: cardBorder,
+          boxShadow: cardShadow,
+          minHeight: 140,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          {React.cloneElement(icon, { sx: { color: iconColor } })}
+          <Typography variant="subtitle2" sx={{ letterSpacing: 1, color: titleColor }}>
+            {title}
+          </Typography>
+        </Box>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: valueColor }}>
+          {value}
         </Typography>
+        {footer && (
+          <Typography variant="body2" sx={{ color: footerColor, mt: 1 }}>
+            {footer}
+          </Typography>
+        )}
       </Box>
-      <Typography variant="h5" sx={{ fontWeight: 700, color: themeName === 'dsp' ? '#39FF14' : '#7CFC00' }}>
-        {value}
-      </Typography>
-      {footer && (
-        <Typography variant="body2" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.7)', mt: 1 }}>
-          {footer}
-        </Typography>
-      )}
-    </Box>
-  );
+    );
+  };
 
   const formatMs = (value) => (typeof value === 'number' ? `${value} ms` : '—');
 
@@ -486,10 +566,19 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
           }}
           aria-label="Theme selection"
           sx={{
-            background: themeName === 'dsp' ? '#000000' : 'rgba(255,255,255,0.05)',
-            border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
+            background: themeName === 'dsp' 
+              ? '#000000' 
+              : themeName === 'synthwave'
+              ? 'rgba(15, 8, 32, 0.8)'
+              : 'rgba(255,255,255,0.05)',
+            border: themeName === 'dsp' 
+              ? '1px solid #39FF14' 
+              : themeName === 'synthwave'
+              ? '2px solid rgba(255, 0, 110, 0.4)'
+              : 'none',
             borderRadius: '999px',
             p: 0.5,
+            boxShadow: themeName === 'synthwave' ? '0 0 20px rgba(255, 0, 110, 0.3)' : 'none',
           }}
         >
           {THEME_CHOICES.map((choice) => (
@@ -502,12 +591,29 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                 textTransform: 'none',
                 fontWeight: 600,
                 border: 'none',
-                color: themeName === 'dsp' ? '#39FF14' : 'inherit',
+                color: themeName === 'dsp' 
+                  ? '#39FF14' 
+                  : themeName === 'synthwave'
+                  ? '#ffbe0b'
+                  : 'inherit',
                 '&.Mui-selected': {
-                  backgroundColor: themeName === 'dsp' ? '#39FF14' : 'rgba(124, 252, 0, 0.2)',
-                  color: themeName === 'dsp' ? '#000000' : 'inherit',
+                  backgroundColor: themeName === 'dsp' 
+                    ? '#39FF14' 
+                    : themeName === 'synthwave'
+                    ? 'rgba(255, 0, 110, 0.3)'
+                    : 'rgba(124, 252, 0, 0.2)',
+                  color: themeName === 'dsp' 
+                    ? '#000000' 
+                    : themeName === 'synthwave'
+                    ? '#ffbe0b'
+                    : 'inherit',
+                  boxShadow: themeName === 'synthwave' ? '0 0 15px rgba(255, 0, 110, 0.5)' : 'none',
                   '&:hover': {
-                    backgroundColor: themeName === 'dsp' ? '#39FF14' : 'rgba(124, 252, 0, 0.3)',
+                    backgroundColor: themeName === 'dsp' 
+                      ? '#39FF14' 
+                      : themeName === 'synthwave'
+                      ? 'rgba(255, 0, 110, 0.4)'
+                      : 'rgba(124, 252, 0, 0.3)',
                   },
                 },
               }}
@@ -532,13 +638,14 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
           letterSpacing: 2,
           textTransform: 'uppercase',
           textShadow: palette.textShadow,
+          filter: themeName === 'synthwave' ? 'drop-shadow(0 0 10px rgba(255, 0, 110, 0.5))' : 'none',
         }}
       >
         🎭 Teaser
       </Typography>
       <Typography
         variant="body1"
-        color={themeName === 'dsp' ? '#39FF14' : 'rgba(176, 190, 197, 0.9)'}
+        color={themeName === 'dsp' ? '#39FF14' : themeName === 'synthwave' ? '#ffbe0b' : 'rgba(176, 190, 197, 0.9)'}
         align="center"
         sx={{
           mb: 4,
@@ -573,6 +680,8 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
             background:
               themeName === 'dsp'
                 ? '#39FF14'
+                : themeName === 'synthwave'
+                ? 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)'
                 : 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
             backgroundSize: '200% 100%',
             animation: 'gradientShift 3s ease infinite',
@@ -608,6 +717,8 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                   boxShadow:
                     themeName === 'dsp'
                       ? '0 0 30px rgba(57, 255, 20, 0.8)'
+                      : themeName === 'synthwave'
+                      ? '0 0 40px rgba(255, 0, 110, 0.8)'
                       : '0 24px 55px rgba(124, 252, 0, 0.4)',
                   transform: 'translateY(-3px)',
                 },
@@ -640,6 +751,8 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                     boxShadow:
                       themeName === 'dsp'
                         ? '0 0 30px rgba(57, 255, 20, 0.8)'
+                        : themeName === 'synthwave'
+                        ? '0 0 40px rgba(131, 56, 236, 0.8)'
                         : '0 20px 45px rgba(255, 117, 140, 0.45)',
                     transform: 'translateY(-3px)',
                   },
@@ -680,6 +793,8 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                     boxShadow:
                       themeName === 'dsp'
                         ? '0 0 15px rgba(57, 255, 20, 0.6)'
+                        : themeName === 'synthwave'
+                        ? '0 0 20px rgba(255, 0, 110, 0.6)'
                         : '0 0 15px rgba(30, 136, 229, 0.4)',
                   },
                 }}
@@ -776,14 +891,41 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
         <Card
           sx={{
             mb: 3,
-            background: themeName === 'dsp' ? '#000000' : 'linear-gradient(155deg, rgba(4,6,18,0.95), rgba(12,36,64,0.95))',
-            border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.2)',
-            boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.4)' : '0 20px 45px rgba(2,6,18,0.65)',
+            background: themeName === 'dsp' 
+              ? '#000000' 
+              : themeName === 'synthwave'
+              ? 'linear-gradient(155deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))'
+              : 'linear-gradient(155deg, rgba(4,6,18,0.95), rgba(12,36,64,0.95))',
+            border: themeName === 'dsp' 
+              ? '1px solid #39FF14' 
+              : themeName === 'synthwave'
+              ? '2px solid rgba(255, 0, 110, 0.4)'
+              : '1px solid rgba(124, 252, 0, 0.2)',
+            boxShadow: themeName === 'dsp' 
+              ? '0 0 20px rgba(57, 255, 20, 0.4)' 
+              : themeName === 'synthwave'
+              ? '0 0 35px rgba(255, 0, 110, 0.4)'
+              : '0 20px 45px rgba(2,6,18,0.65)',
           }}
         >
           <CardContent>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: themeName === 'dsp' ? '#39FF14' : 'inherit' }}>
-              <GraphicEq sx={{ color: themeName === 'dsp' ? '#39FF14' : '#7CFC00' }} />
+            <Typography variant="h6" sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1, 
+              color: themeName === 'dsp' 
+                ? '#39FF14' 
+                : themeName === 'synthwave'
+                ? '#ffbe0b'
+                : 'inherit' 
+            }}>
+              <GraphicEq sx={{ 
+                color: themeName === 'dsp' 
+                  ? '#39FF14' 
+                  : themeName === 'synthwave'
+                  ? '#ff006e'
+                  : '#7CFC00' 
+              }} />
               Neural Telemetry
             </Typography>
             <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -822,19 +964,51 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
             mb: 3,
             p: 3,
             borderRadius: 3,
-            background: themeName === 'dsp' ? '#000000' : 'linear-gradient(135deg, rgba(11,30,61,0.9), rgba(53,16,67,0.85))',
-            border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(142, 36, 170, 0.35)',
-            boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.3)' : '0 18px 40px rgba(4,5,20,0.7)',
+            background: themeName === 'dsp' 
+              ? '#000000' 
+              : themeName === 'synthwave'
+              ? 'linear-gradient(135deg, rgba(15,8,32,0.9), rgba(50,20,70,0.85))'
+              : 'linear-gradient(135deg, rgba(11,30,61,0.9), rgba(53,16,67,0.85))',
+            border: themeName === 'dsp' 
+              ? '1px solid #39FF14' 
+              : themeName === 'synthwave'
+              ? '2px solid rgba(131, 56, 236, 0.4)'
+              : '1px solid rgba(142, 36, 170, 0.35)',
+            boxShadow: themeName === 'dsp' 
+              ? '0 0 20px rgba(57, 255, 20, 0.3)' 
+              : themeName === 'synthwave'
+              ? '0 0 30px rgba(131, 56, 236, 0.4)'
+              : '0 18px 40px rgba(4,5,20,0.7)',
           }}
         >
-          <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD', mb: 1 }}>
-            <Psychology fontSize="small" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />
+          <Typography variant="subtitle1" sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1, 
+            color: themeName === 'dsp' 
+              ? '#39FF14' 
+              : themeName === 'synthwave'
+              ? '#ffbe0b'
+              : '#E3F2FD', 
+            mb: 1 
+          }}>
+            <Psychology fontSize="small" sx={{ 
+              color: themeName === 'dsp' 
+                ? '#39FF14' 
+                : themeName === 'synthwave'
+                ? '#8338ec'
+                : 'inherit' 
+            }} />
             Chain of Thought
           </Typography>
           <Typography
             variant="body1"
             sx={{
-              color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.85)',
+              color: themeName === 'dsp' 
+                ? '#39FF14' 
+                : themeName === 'synthwave'
+                ? '#ffbe0b'
+                : 'rgba(227, 242, 253, 0.85)',
               lineHeight: 1.7,
             }}
           >
@@ -934,6 +1108,8 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
             boxShadow:
               themeName === 'dsp'
                 ? '0 0 25px rgba(57, 255, 20, 0.4)'
+                : themeName === 'synthwave'
+                ? '0 0 40px rgba(131, 56, 236, 0.4)'
                 : '0 25px 60px rgba(4, 5, 20, 0.8)',
           }}
         >
@@ -967,6 +1143,8 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                     background:
                       themeName === 'dsp'
                         ? '#39FF14'
+                        : themeName === 'synthwave'
+                        ? 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)'
                         : 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
                   },
                 }}
