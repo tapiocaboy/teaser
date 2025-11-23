@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "voice-agent-backend"
+version = "0.1.0"
+description = "Voice Agent Backend API"
+authors = ["Voice Agent Team <team@voiceagent.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+websockets = "*"
+faster-whisper = "*"
+ollama = "*"
+piper-tts = "*"
+sqlalchemy = "*"
+alembic = "*"
+pydub = "*"
+numpy = "*"
+scipy = "*"
+python-multipart = "*"
+pydantic = "*"
+python-dotenv = "*"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+black = "^23.11.0"
+isort = "^5.12.0"
+
+[tool.poetry.scripts]
+start = "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+serve = "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

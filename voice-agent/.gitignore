@@ -1,0 +1,54 @@
+# Root level .gitignore for Voice Agent project
+# This file contains general ignores that apply to the entire project
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Database files (if any at root level)
+*.db
+*.sqlite
+*.sqlite3
+
+# Model directories (if any at root level)
+models/
+voices/
+piper/
+whisper/
+
+# Docker volumes and data
+data/
+
+# Build artifacts
+*.tar.gz
+*.zip
+
+# Note: Specific .gitignore files exist in frontend/ and backend/ subdirectories
+# for language/framework specific ignores

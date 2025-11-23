@@ -1,0 +1,31 @@
+# Core web framework
+fastapi
+uvicorn[standard]
+websockets
+
+# Speech-to-Text
+faster-whisper
+
+# LLM Integration
+ollama
+
+# Text-to-Speech
+piper-tts
+
+# Database
+sqlalchemy
+alembic
+
+# Audio processing
+pydub
+numpy
+scipy
+
+# Utilities
+python-multipart
+pydantic
+python-dotenv
+
+# Development
+pytest
+pytest-asyncio

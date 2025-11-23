@@ -1,0 +1,56 @@
+# Voice Agent Configuration
+app:
+  name: "Voice Agent"
+  version: "1.0.0"
+  debug: true
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: true
+
+models:
+  stt:
+    model_size: "base"  # Options: tiny, base, small, medium, large
+    device: "cpu"  # Options: cpu, cuda
+    compute_type: "int8"  # Options: int8, float16, float32
+
+  llm:
+    model: "mistral"  # Options: mistral, llama3.2, llama2
+    temperature: 0.7
+    max_tokens: 512
+    context_window: 4096
+
+  tts:
+    voice_model: "en_US-amy-medium"  # Piper voice model
+    speaker_id: null
+    speed: 1.0
+    noise_scale: 0.667
+    noise_w: 0.8
+    length_scale: 1.0
+
+database:
+  url: "sqlite:///data/conversations.db"
+  echo: false  # Set to true for SQL logging
+
+websocket:
+  max_connections: 10
+  heartbeat_interval: 30  # seconds
+  message_timeout: 60  # seconds
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/voice_agent.log"
+
+audio:
+  sample_rate: 16000
+  channels: 1
+  format: "wav"
+  chunk_size: 1024
+  vad_threshold: 0.5
+
+performance:
+  max_concurrent_requests: 5
+  request_timeout: 30  # seconds
+  model_cache_ttl: 3600  # seconds

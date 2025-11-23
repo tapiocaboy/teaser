@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/models
+      - ./data:/data
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - ollama
+    networks:
+      - voice-agent-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - voice-agent-network
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - voice-agent-network
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: voice_agent
+      POSTGRES_USER: voice_user
+      POSTGRES_PASSWORD: voice_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - voice-agent-network
+
+volumes:
+  ollama_data:
+  postgres_data:
+
+networks:
+  voice-agent-network:
+    driver: bridge
