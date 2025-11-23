@@ -1,6 +1,6 @@
-# Voice Agent Backend
+# Teaser Backend
 
-Backend API for the Voice Agent application, built with FastAPI and managed with Poetry.
+Backend API for the Teaser application, built with FastAPI and managed with Poetry.
 
 ## 🚀 Quick Start
 

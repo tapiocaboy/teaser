@@ -1,4 +1,4 @@
-# Voice Agent 🤖
+# Teaser 🎭
 
 A fully local, privacy-focused voice assistant with real-time speech recognition, LLM processing, and natural text-to-speech capabilities.
 
@@ -107,7 +107,7 @@ Piper models are automatically downloaded on first use. If you want to pre-downl
 teaser/
 ├── .gitignore                 # Root-level ignores
 ├── README.md                  # This file
-└── voice-agent/               # Voice Agent application
+└── voice-agent/               # Teaser application
     ├── setup.sh               # Automated setup script
     ├── docker-compose.yml     # Docker deployment
 ├── backend/                   # Python FastAPI backend
@@ -168,7 +168,7 @@ docker-compose up --build
 
 ## 🎤 Usage
 
-1. **Click "Start Voice Agent"** to begin recording
+1. **Click "Start Teaser"** to begin recording
 2. **Speak your message** clearly
 3. **Click "Stop Recording"** to process
 4. The system will:

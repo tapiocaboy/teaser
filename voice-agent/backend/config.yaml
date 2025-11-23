@@ -1,6 +1,6 @@
-# Voice Agent Configuration
+# Teaser Configuration
 app:
-  name: "Voice Agent"
+  name: "Teaser"
   version: "1.0.0"
   debug: true
 
@@ -54,3 +54,7 @@ performance:
   max_concurrent_requests: 5
   request_timeout: 30  # seconds
   model_cache_ttl: 3600  # seconds
+
+multiprocessing:
+  start_method: "fork"  # Options: fork, spawn (fork is better for cleanup)
+  disable_warnings: true  # Suppress resource tracker warnings

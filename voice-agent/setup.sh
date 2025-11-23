@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Voice Agent Setup Script
-echo "🎯 Setting up Voice Agent Environment"
+# Teaser Setup Script
+echo "🎯 Setting up Teaser Environment"
 
 # Check for required tools
 echo "📋 Checking system requirements..."

@@ -1,5 +1,5 @@
 """
-Database Models for Voice Agent
+Database Models for Teaser
 """
 import os
 from datetime import datetime

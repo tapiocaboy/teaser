@@ -2,7 +2,7 @@
 Ollama LLM Service
 """
 import logging
-from typing import Optional, List, Dict, Any, AsyncGenerator
+from typing import Optional, List, Dict, Any, AsyncGenerator, Tuple
 import ollama
 import json
 
@@ -44,7 +44,7 @@ class OllamaLLM:
         context: Optional[str] = None,
         system_prompt: Optional[str] = None,
         conversation_history: Optional[List[Dict[str, str]]] = None
-    ) -> str:
+    ) -> Dict[str, Any]:
         """
         Generate response from LLM
 
@@ -55,7 +55,7 @@ class OllamaLLM:
             conversation_history: Previous conversation messages (optional)
 
         Returns:
-            Generated response text
+            Dict containing answer text plus debugging metadata
         """
         try:
             # Build messages array
@@ -65,7 +65,12 @@ class OllamaLLM:
             if system_prompt:
                 messages.append({"role": "system", "content": system_prompt})
             else:
-                default_system = "You are a helpful, intelligent voice assistant. Keep your responses clear and concise since they will be spoken aloud."
+                default_system = (
+                    "You are a helpful, intelligent voice assistant. "
+                    "Respond in valid JSON with keys 'answer' and 'reasoning'. "
+                    "'answer' must be the concise reply read aloud to the user. "
+                    "'reasoning' should summarize your thought process in <=2 sentences."
+                )
                 messages.append({"role": "system", "content": default_system})
 
             # Add context if provided
@@ -91,13 +96,51 @@ class OllamaLLM:
                 }
             )
 
-            generated_text = response['message']['content'].strip()
-            logger.info(f"Generated response: {len(generated_text)} characters")
-            return generated_text
+            raw_text = response['message']['content'].strip()
+            answer_text, reasoning_text = self._parse_structured_response(raw_text)
+
+            prompt_tokens = response.get('prompt_eval_count', 0)
+            completion_tokens = response.get('eval_count', 0)
+            timings = {
+                "total_duration_ms": self._ns_to_ms(response.get('total_duration')),
+                "prompt_eval_ms": self._ns_to_ms(response.get('prompt_eval_duration')),
+                "generation_ms": self._ns_to_ms(response.get('eval_duration')),
+            }
+
+            logger.info(
+                "Generated response (%s chars, prompt_tokens=%s, completion_tokens=%s)",
+                len(answer_text),
+                prompt_tokens,
+                completion_tokens
+            )
+
+            return {
+                "answer": answer_text,
+                "reasoning": reasoning_text,
+                "raw_response": raw_text,
+                "model": response.get('model', self.model),
+                "token_usage": {
+                    "prompt": prompt_tokens,
+                    "completion": completion_tokens,
+                    "total": (prompt_tokens or 0) + (completion_tokens or 0),
+                },
+                "timings": timings
+            }
 
         except Exception as e:
             logger.error(f"Error generating LLM response: {e}")
-            return "I'm sorry, I encountered an error processing your request."
+            return {
+                "answer": "I'm sorry, I encountered an error processing your request.",
+                "reasoning": None,
+                "raw_response": "",
+                "model": self.model,
+                "token_usage": {
+                    "prompt": 0,
+                    "completion": 0,
+                    "total": 0
+                },
+                "timings": {}
+            }
 
     async def stream_response(
         self,
@@ -188,3 +231,35 @@ class OllamaLLM:
         except Exception as e:
             logger.error(f"Error getting model info: {e}")
             return {}
+
+    def _parse_structured_response(self, raw_content: str) -> Tuple[str, Optional[str]]:
+        """Extract answer/reasoning from JSON or tagged content."""
+        content = raw_content.strip()
+        answer = content
+        reasoning = None
+
+        if content.startswith("{") and content.endswith("}"):
+            try:
+                data = json.loads(content)
+                answer = data.get("answer") or data.get("response") or answer
+                reasoning = data.get("reasoning") or data.get("thoughts")
+                return answer.strip(), reasoning.strip() if isinstance(reasoning, str) else reasoning
+            except json.JSONDecodeError:
+                pass
+
+        lowered = content.lower()
+        for marker in ["reasoning:", "chain of thought:", "thought process:"]:
+            idx = lowered.find(marker)
+            if idx != -1:
+                reasoning_text = content[idx + len(marker):].strip()
+                answer = content[:idx].strip()
+                reasoning = reasoning_text
+                break
+
+        return answer, reasoning
+
+    @staticmethod
+    def _ns_to_ms(value: Optional[int]) -> Optional[float]:
+        if value is None:
+            return None
+        return round(value / 1_000_000, 2)

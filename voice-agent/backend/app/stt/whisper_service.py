@@ -2,7 +2,7 @@
 Whisper Speech-to-Text Service
 """
 import logging
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 import io
 import tempfile
 import os
@@ -257,3 +257,23 @@ class WhisperSTT:
             "uz", "fo", "ht", "ps", "tk", "nn", "mt", "sa", "lb", "my", "bo", "tl", "mg",
             "as", "tt", "haw", "ln", "ha", "ba", "jw", "su"
         ]
+
+    def cleanup(self):
+        """Clean up resources"""
+        try:
+            if hasattr(self, 'model') and self.model is not None:
+                logger.info("Cleaning up Whisper model resources...")
+                # Force garbage collection of the model
+                del self.model
+                self.model = None
+                logger.info("Whisper model cleanup completed")
+        except Exception as e:
+            logger.warning(f"Error during Whisper cleanup: {e}")
+
+    def get_model_info(self) -> Dict[str, str]:
+        """Expose metadata for diagnostics"""
+        return {
+            "model": self.model_size,
+            "device": self.device,
+            "compute_type": self.compute_type
+        }

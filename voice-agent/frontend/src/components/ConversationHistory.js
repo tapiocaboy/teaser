@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Card,
@@ -19,6 +19,34 @@ const ConversationHistory = () => {
 
   const apiService = new ApiService();
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadConversations = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const data = await apiService.getConversations(25);
+        if (!isMounted) return;
+
+        setConversations(data?.conversations || []);
+      } catch (err) {
+        if (!isMounted) return;
+        setError(err.message || 'Failed to load conversation history');
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadConversations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();

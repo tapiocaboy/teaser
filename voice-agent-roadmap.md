@@ -1,4 +1,4 @@
-# Voice Agent Development Roadmap
+# Teaser Development Roadmap
 
 ## 🎯 Project Overview
 Build a fully local, privacy-focused voice assistant with real-time speech recognition, LLM processing, and natural text-to-speech capabilities.

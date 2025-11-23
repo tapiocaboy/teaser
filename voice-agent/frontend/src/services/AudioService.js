@@ -3,16 +3,19 @@ class AudioService {
     this.mediaRecorder = null;
     this.audioContext = null;
     this.analyser = null;
-    this.dataArray = null;
+    this.frequencyArray = null;
+    this.timeDomainArray = null;
     this.animationFrame = null;
     this.onAudioRecorded = null;
     this.onAudioLevel = null;
+    this.onAnalysis = null;
   }
 
-  async startRecording(onRecorded, onLevel) {
+  async startRecording(onRecorded, onLevel, onAnalysis) {
     try {
       this.onAudioRecorded = onRecorded;
       this.onAudioLevel = onLevel;
+      this.onAnalysis = onAnalysis;
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -49,7 +52,7 @@ class AudioService {
       };
 
       // Set up audio analysis for visual feedback
-      if (onLevel) {
+      if (onLevel || onAnalysis) {
         this.setupAudioAnalysis(stream);
       }
 
@@ -83,8 +86,9 @@ class AudioService {
       this.analyser = this.audioContext.createAnalyser();
       const source = this.audioContext.createMediaStreamSource(stream);
 
-      this.analyser.fftSize = 256;
-      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+      this.analyser.fftSize = 512;
+      this.frequencyArray = new Uint8Array(this.analyser.frequencyBinCount);
+      this.timeDomainArray = new Uint8Array(this.analyser.fftSize);
 
       source.connect(this.analyser);
 
@@ -95,22 +99,66 @@ class AudioService {
   }
 
   startAudioLevelMonitoring() {
-    if (!this.analyser || !this.dataArray || !this.onAudioLevel) return;
+    if (!this.analyser) return;
 
     const monitorLevel = () => {
-      if (!this.analyser || !this.dataArray) return;
+      if (!this.analyser) return;
 
-      this.analyser.getByteFrequencyData(this.dataArray);
+      if (this.frequencyArray) {
+        this.analyser.getByteFrequencyData(this.frequencyArray);
+      }
+      if (this.timeDomainArray) {
+        this.analyser.getByteTimeDomainData(this.timeDomainArray);
+      }
 
       // Calculate average level
-      let sum = 0;
-      for (let i = 0; i < this.dataArray.length; i++) {
-        sum += this.dataArray[i];
+      let level = 0;
+      if (this.frequencyArray && this.frequencyArray.length) {
+        let sum = 0;
+        for (let i = 0; i < this.frequencyArray.length; i++) {
+          sum += this.frequencyArray[i];
+        }
+        const average = sum / this.frequencyArray.length;
+        level = average / 255; // Normalize to 0-1
       }
-      const average = sum / this.dataArray.length;
-      const level = average / 255; // Normalize to 0-1
 
-      this.onAudioLevel(level);
+      if (this.onAudioLevel && typeof level === 'number') {
+        this.onAudioLevel(level);
+      }
+
+      if (this.onAnalysis && this.timeDomainArray && this.frequencyArray) {
+        const waveformPoints = [];
+        const samplePoints = 64;
+        const step = Math.max(1, Math.floor(this.timeDomainArray.length / samplePoints));
+        let maxAmplitude = 0;
+
+        for (let i = 0; i < samplePoints; i++) {
+          const sample = (this.timeDomainArray[i * step] - 128) / 128;
+          waveformPoints.push(sample);
+          maxAmplitude = Math.max(maxAmplitude, Math.abs(sample));
+        }
+
+        let peakIndex = 0;
+        let peakValue = 0;
+        for (let i = 0; i < this.frequencyArray.length; i++) {
+          if (this.frequencyArray[i] > peakValue) {
+            peakValue = this.frequencyArray[i];
+            peakIndex = i;
+          }
+        }
+
+        const nyquist = (this.audioContext?.sampleRate || 44100) / 2;
+        const peakFrequency = peakIndex ? (peakIndex / this.frequencyArray.length) * nyquist : 0;
+        const wavelength = peakFrequency > 0 ? 343 / peakFrequency : 0;
+
+        this.onAnalysis({
+          wavePoints: waveformPoints,
+          amplitude: maxAmplitude,
+          frequency: Math.round(peakFrequency),
+          wavelength,
+          level,
+        });
+      }
 
       this.animationFrame = requestAnimationFrame(monitorLevel);
     };
@@ -130,8 +178,10 @@ class AudioService {
     }
 
     this.analyser = null;
-    this.dataArray = null;
+    this.frequencyArray = null;
+    this.timeDomainArray = null;
     this.mediaRecorder = null;
+    this.onAnalysis = null;
   }
 
   // Convert audio blob to WAV format if needed
