@@ -4,28 +4,60 @@ A fully local, privacy-focused voice assistant with real-time speech recognition
 
 ## 🏗️ Architecture
 
-- **Frontend**: React with TypeScript, Material-UI
+- **Frontend**: React with JavaScript, Material-UI
 - **Backend**: Python FastAPI with WebSocket support
 - **STT**: Whisper (faster-whisper for performance)
 - **LLM**: Ollama with Mistral/Llama models
-- **TTS**: Piper Text-to-Speech
+- **TTS**: Piper Text-to-Speech (with fallback sine wave generation)
 - **Database**: SQLite with SQLAlchemy
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+
+- **Python 3.10+** (3.13 recommended)
+- **Node.js 18+** and npm
 - **Poetry** (Python dependency management) - `pip install poetry`
-- Ollama (will be installed automatically)
+- **Ollama** (for LLM models) - will be installed automatically
+- **ffmpeg** (for audio processing)
+- **Git** (for cloning repositories)
 
-### Automated Setup
+### 🚀 One-Command Setup
 
 ```bash
-# Clone and setup everything
+# Automated setup (recommended)
 chmod +x setup.sh
 ./setup.sh
+```
+
+This script will:
+- Install Ollama and pull required models
+- Set up Python virtual environment with Poetry
+- Install Node.js dependencies
+- Download necessary models
+- Start all services
+
+### 🏃‍♂️ Quick Manual Setup
+
+```bash
+# 1. Install Ollama and models
+curl -fsSL https://ollama.ai/install.sh | sh
+ollama pull mistral
+
+# 2. Backend setup
+cd backend
+poetry install
+
+# 3. Frontend setup
+cd ../frontend
+npm install
+
+# 4. Start services (in separate terminals)
+# Terminal 1: ollama serve
+# Terminal 2: cd backend && poetry run start
+# Terminal 3: cd frontend && npm start
+
+# 5. Open http://localhost:3000
 ```
 
 ### Manual Setup
@@ -42,7 +74,7 @@ poetry install
 
 ```bash
 # Install Node.js dependencies
-cd ../frontend
+cd frontend
 npm install
 ```
 
@@ -59,11 +91,35 @@ ollama pull llama3.2
 
 #### 3. Download TTS Models (Optional)
 
+Piper models are automatically downloaded on first use. If you want to pre-download them:
+
 ```bash
-# Download Piper voice models
-cd models/piper
-wget https://github.com/rhasspy/piper/releases/download/v1.2.0/voice-en-us-amy-medium.tar.gz
-tar -xzf voice-en-us-amy-medium.tar.gz
+# The setup script handles model downloads automatically
+# Models are stored in backend/models/piper/
+```
+
+## 📁 Project Structure
+
+```
+voice-agent/
+├── .gitignore                 # Root-level ignores
+├── README.md                  # This file
+├── setup.sh                   # Automated setup script
+├── docker-compose.yml         # Docker deployment
+├── backend/                   # Python FastAPI backend
+│   ├── .gitignore            # Python-specific ignores
+│   ├── app/                  # Application code
+│   ├── models/               # Downloaded AI models
+│   ├── data/                 # SQLite database
+│   ├── pyproject.toml        # Poetry configuration
+│   └── Dockerfile
+├── frontend/                  # React frontend
+│   ├── .gitignore            # Node.js-specific ignores
+│   ├── src/                  # React application
+│   ├── public/               # Static assets
+│   ├── package.json          # Node dependencies
+│   └── Dockerfile
+└── models/                   # Shared model directory
 ```
 
 ## 🎯 Running the Application
@@ -108,22 +164,59 @@ docker-compose up --build
 
 ## 🎤 Usage
 
-1. Click "Start Listening" to begin recording
-2. Speak your message
-3. The system will:
-   - Transcribe your speech to text
-   - Generate an AI response using the local LLM
-   - Convert the response back to speech
-4. View conversation history in the interface
+1. **Click "Start Voice Agent"** to begin recording
+2. **Speak your message** clearly
+3. **Click "Stop Recording"** to process
+4. The system will:
+   - Transcribe your speech to text (STT)
+   - Generate an AI response using local LLM
+   - Convert the response to speech (TTS)
+   - Save the conversation to database
+5. **Playback Options**:
+   - **"Play Response"**: Hear the AI's spoken answer
+   - **"Play Recording"**: Hear your original voice
+6. **View conversation history** in the interface
+
+## 🔊 Audio Features
+
+- **Real-time audio visualization** during recording
+- **Clean TTS audio** at 440Hz test tone (currently)
+- **Recording playback** of your original voice
+- **Automatic audio cleanup** after playback
 
 ## 🔧 Configuration
 
+### Environment Variables
+
+Create `.env` files in the respective directories:
+
+**Frontend (.env):**
+```bash
+REACT_APP_API_BASE_URL=http://localhost:8000
+REACT_APP_MAX_AUDIO_DURATION=30
+```
+
+**Backend (.env):**
+```bash
+OLLAMA_BASE_URL=http://localhost:11434
+DATABASE_URL=sqlite:///./data/conversations.db
+```
+
+### Backend Configuration
+
 Edit `backend/config.yaml` to customize:
 
-- Model sizes and compute settings
-- Voice parameters
-- Database configuration
-- WebSocket settings
+- **STT Settings**: Model size, language, compute settings
+- **LLM Settings**: Model selection, temperature, token limits
+- **TTS Settings**: Voice parameters, sample rate
+- **Database**: Connection settings, table names
+- **WebSocket**: Buffer sizes, timeouts
+
+### Model Configuration
+
+- **Whisper**: Uses `faster-whisper` with base model
+- **Ollama**: Supports Mistral, Llama 3.2, and other models
+- **Piper**: Falls back to sine wave generation (models auto-download)
 
 ## 🐳 Docker Services
 
@@ -140,6 +233,29 @@ Edit `backend/config.yaml` to customize:
 | LLM Response | < 2s | ~1.5s |
 | TTS Generation | < 300ms | ~200ms |
 | End-to-end | < 3s | ~2s |
+
+## ⚠️ Current Status & Limitations
+
+### ✅ **Working Features**
+- Speech-to-text transcription
+- LLM response generation (via Ollama)
+- Text-to-speech audio generation
+- Conversation history storage
+- Real-time audio visualization
+- Playback of AI responses and recordings
+
+### 🚧 **Known Limitations**
+- TTS currently uses a test sine wave (440Hz) instead of natural speech
+- Piper TTS models need manual setup for production-quality speech
+- Web Audio API fallback may have compatibility issues in some browsers
+- Large audio files may cause memory issues
+
+### 🔄 **Future Improvements**
+- Full Piper TTS integration with natural voices
+- Real-time WebSocket streaming
+- GPU acceleration support
+- Voice activity detection
+- Multiple language support
 
 ## 🛠️ Development
 
@@ -179,10 +295,14 @@ voice-agent/
 
 ### Common Issues
 
-1. **"Model not found"**: Run `ollama pull mistral`
-2. **"Port already in use"**: Kill process or change port in config
-3. **"Microphone not accessible"**: Check browser permissions
-4. **Slow performance**: Use smaller models or GPU acceleration
+1. **"Model not found"**: Run `ollama pull mistral` or `ollama pull llama3.2`
+2. **"Port already in use"**: Kill processes: `lsof -ti:3000,8000 | xargs kill`
+3. **"Microphone not accessible"**: Check browser permissions and refresh page
+4. **"Audio sounds distorted"**: Check browser audio settings and try different browser
+5. **"Compilation errors"**: Run `npm install` in frontend directory
+6. **"Module not found"**: Run `poetry install` in backend directory
+7. **Slow performance**: Use smaller models or enable GPU acceleration in Ollama
+8. **"python-multipart not installed"**: Run commands with `poetry run` prefix
 
 ### Logs
 
