@@ -2,6 +2,8 @@
 
 A fully local, privacy-focused voice assistant with real-time speech recognition, LLM processing, and natural text-to-speech capabilities.
 
+**Project Location**: `voice-agent/` subdirectory
+
 ## 🏗️ Architecture
 
 - **Frontend**: React with JavaScript, Material-UI
@@ -26,6 +28,7 @@ A fully local, privacy-focused voice assistant with real-time speech recognition
 
 ```bash
 # Automated setup (recommended)
+cd voice-agent
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -45,7 +48,7 @@ curl -fsSL https://ollama.ai/install.sh | sh
 ollama pull mistral
 
 # 2. Backend setup
-cd backend
+cd voice-agent/backend
 poetry install
 
 # 3. Frontend setup
@@ -66,7 +69,7 @@ npm install
 
 ```bash
 # Install Python dependencies with Poetry
-cd backend
+cd voice-agent/backend
 poetry install
 ```
 
@@ -74,7 +77,7 @@ poetry install
 
 ```bash
 # Install Node.js dependencies
-cd frontend
+cd voice-agent/frontend
 npm install
 ```
 
@@ -101,11 +104,12 @@ Piper models are automatically downloaded on first use. If you want to pre-downl
 ## 📁 Project Structure
 
 ```
-voice-agent/
+teaser/
 ├── .gitignore                 # Root-level ignores
 ├── README.md                  # This file
-├── setup.sh                   # Automated setup script
-├── docker-compose.yml         # Docker deployment
+└── voice-agent/               # Voice Agent application
+    ├── setup.sh               # Automated setup script
+    ├── docker-compose.yml     # Docker deployment
 ├── backend/                   # Python FastAPI backend
 │   ├── .gitignore            # Python-specific ignores
 │   ├── app/                  # Application code
@@ -133,7 +137,7 @@ voice-agent/
 
 2. **Start Backend** (Terminal 2):
    ```bash
-   cd backend
+   cd voice-agent/backend
    poetry run start
    # or for development with auto-reload:
    # poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -141,7 +145,7 @@ voice-agent/
 
 3. **Start Frontend** (Terminal 3):
    ```bash
-   cd frontend
+   cd voice-agent/frontend
    npm start
    ```
 
@@ -190,13 +194,13 @@ docker-compose up --build
 
 Create `.env` files in the respective directories:
 
-**Frontend (.env):**
+**Frontend (.env in voice-agent/frontend/):**
 ```bash
 REACT_APP_API_BASE_URL=http://localhost:8000
 REACT_APP_MAX_AUDIO_DURATION=30
 ```
 
-**Backend (.env):**
+**Backend (.env in voice-agent/backend/):**
 ```bash
 OLLAMA_BASE_URL=http://localhost:11434
 DATABASE_URL=sqlite:///./data/conversations.db
@@ -204,7 +208,7 @@ DATABASE_URL=sqlite:///./data/conversations.db
 
 ### Backend Configuration
 
-Edit `backend/config.yaml` to customize:
+Edit `voice-agent/backend/config.yaml` to customize:
 
 - **STT Settings**: Model size, language, compute settings
 - **LLM Settings**: Model selection, temperature, token limits
