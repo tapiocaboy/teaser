@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -14,6 +14,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import {
   Mic,
@@ -40,7 +42,85 @@ const INITIAL_VISUALIZER_STATE = {
   wavelength: 0,
 };
 
-const VoiceInterface = () => {
+const THEME_CHOICES = [
+  { value: 'neon', label: 'Neon Pulse' },
+  { value: 'dsp', label: 'DSP Matrix' },
+];
+
+const themeStyles = {
+  neon: {
+    textGradient: 'linear-gradient(120deg, #7CFC00 0%, #1e88e5 45%, #8e24aa 85%)',
+    panelBg: 'linear-gradient(145deg, rgba(4, 2, 14, 0.85), rgba(13, 32, 61, 0.95))',
+    panelBorder: '1px solid rgba(124, 252, 0, 0.2)',
+    panelOverlay: 'radial-gradient(circle at 15% 20%, rgba(124,252,0,0.08), transparent 45%)',
+    startGradient: 'linear-gradient(120deg, #7CFC00 0%, #1e88e5 60%)',
+    startHover: 'linear-gradient(120deg, #7CFC00 0%, #1d976c 60%, #00B4DB 100%)',
+    startColor: '#ffffff',
+    startShadow: '0 18px 45px rgba(0, 131, 176, 0.45)',
+    listeningGradient: 'linear-gradient(120deg, #00c853 0%, #7CFC00 70%)',
+    listeningShadow: '0 15px 35px rgba(0, 200, 83, 0.35)',
+    listeningText: '#01010b',
+    stopGradient: 'linear-gradient(130deg, #6a11cb 0%, #b91372 80%)',
+    stopHover: 'linear-gradient(130deg, #b91372 0%, #ff758c 100%)',
+    stopShadow: '0 14px 30px rgba(185, 19, 114, 0.5)',
+    progressTrack: 'rgba(255, 255, 255, 0.1)',
+    progressBar: 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
+    summaryBg: 'linear-gradient(135deg, rgba(30, 136, 229, 0.18), rgba(124, 252, 0, 0.18))',
+    summaryBorder: '1px solid rgba(124, 252, 0, 0.25)',
+    cardBg: 'linear-gradient(160deg, rgba(4, 5, 20, 0.9), rgba(13, 34, 66, 0.95))',
+    cardBorder: '1px solid rgba(124, 252, 0, 0.18)',
+    transcriptBg: 'linear-gradient(135deg, rgba(124, 252, 0, 0.12), rgba(30, 136, 229, 0.12))',
+    transcriptBorder: '1px solid rgba(124, 252, 0, 0.3)',
+    transcriptAccent: '#7CFC00',
+    responseBg: 'linear-gradient(135deg, rgba(142, 36, 170, 0.12), rgba(30, 136, 229, 0.12))',
+    responseBorder: '1px solid rgba(142, 36, 170, 0.25)',
+    responseAccent: '#8e24aa',
+    historyBorder: '2px solid rgba(142, 36, 170, 0.6)',
+    historyBg: 'rgba(4, 2, 14, 0.7)',
+    historyHoverBg: 'rgba(142, 36, 170, 0.2)',
+    historyHoverBorder: '2px solid #7CFC00',
+    historyHoverShadow: '0 15px 30px rgba(142, 36, 170, 0.35)',
+    textShadow: '0 0 30px rgba(124, 252, 0, 0.35)',
+    bodyTextShadow: '0 0 20px rgba(0, 188, 212, 0.25)',
+  },
+  dsp: {
+    textGradient: 'none',
+    panelBg: '#000000',
+    panelBorder: '1px solid #39FF14',
+    panelOverlay: 'none',
+    startGradient: '#39FF14',
+    startHover: '#39FF14',
+    startColor: '#000000',
+    startShadow: '0 0 20px rgba(57, 255, 20, 0.6)',
+    listeningGradient: '#39FF14',
+    listeningShadow: '0 0 20px rgba(57, 255, 20, 0.6)',
+    listeningText: '#000000',
+    stopGradient: '#39FF14',
+    stopHover: '#39FF14',
+    stopShadow: '0 0 20px rgba(57, 255, 20, 0.6)',
+    progressTrack: '#000000',
+    progressBar: '#39FF14',
+    summaryBg: '#000000',
+    summaryBorder: '1px solid #39FF14',
+    cardBg: '#000000',
+    cardBorder: '1px solid #39FF14',
+    transcriptBg: '#000000',
+    transcriptBorder: '1px solid #39FF14',
+    transcriptAccent: '#39FF14',
+    responseBg: '#000000',
+    responseBorder: '1px solid #39FF14',
+    responseAccent: '#39FF14',
+    historyBorder: '2px solid #39FF14',
+    historyBg: '#000000',
+    historyHoverBg: '#000000',
+    historyHoverBorder: '2px solid #39FF14',
+    historyHoverShadow: '0 0 25px rgba(57, 255, 20, 0.5)',
+    textShadow: '0 0 15px rgba(57, 255, 20, 0.5)',
+    bodyTextShadow: '0 0 10px rgba(57, 255, 20, 0.3)',
+  },
+};
+
+const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -58,6 +138,11 @@ const VoiceInterface = () => {
 
   const audioService = useRef(new AudioService());
   const apiService = useRef(new ApiService());
+
+  const palette = useMemo(
+    () => themeStyles[themeName] || themeStyles.neon,
+    [themeName]
+  );
 
   // WebSocket connection removed - using HTTP API instead
   useEffect(() => {
@@ -362,23 +447,23 @@ const VoiceInterface = () => {
       sx={{
         p: 3,
         borderRadius: 3,
-        background: gradient || 'linear-gradient(145deg, rgba(3,7,18,0.9), rgba(11,25,48,0.95))',
-        border: '1px solid rgba(124, 252, 0, 0.2)',
-        boxShadow: '0 15px 40px rgba(3,7,18,0.55)',
+        background: themeName === 'dsp' ? '#000000' : (gradient || 'linear-gradient(145deg, rgba(3,7,18,0.9), rgba(11,25,48,0.95))'),
+        border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.2)',
+        boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.3)' : '0 15px 40px rgba(3,7,18,0.55)',
         minHeight: 140,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        {icon}
-        <Typography variant="subtitle2" sx={{ letterSpacing: 1, color: '#E3F2FD' }}>
+        {React.cloneElement(icon, { sx: { color: themeName === 'dsp' ? '#39FF14' : icon.props.sx?.color } })}
+        <Typography variant="subtitle2" sx={{ letterSpacing: 1, color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD' }}>
           {title}
         </Typography>
       </Box>
-      <Typography variant="h5" sx={{ fontWeight: 700, color: '#7CFC00' }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, color: themeName === 'dsp' ? '#39FF14' : '#7CFC00' }}>
         {value}
       </Typography>
       {footer && (
-        <Typography variant="body2" sx={{ color: 'rgba(227, 242, 253, 0.7)', mt: 1 }}>
+        <Typography variant="body2" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.7)', mt: 1 }}>
           {footer}
         </Typography>
       )}
@@ -389,6 +474,49 @@ const VoiceInterface = () => {
 
   return (
     <Box sx={{ maxWidth: 960, mx: 'auto', position: 'relative', width: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+        <ToggleButtonGroup
+          value={themeName}
+          exclusive
+          size="small"
+          onChange={(event, value) => {
+            if (value && onThemeChange) {
+              onThemeChange(value);
+            }
+          }}
+          aria-label="Theme selection"
+          sx={{
+            background: themeName === 'dsp' ? '#000000' : 'rgba(255,255,255,0.05)',
+            border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
+            borderRadius: '999px',
+            p: 0.5,
+          }}
+        >
+          {THEME_CHOICES.map((choice) => (
+            <ToggleButton
+              key={choice.value}
+              value={choice.value}
+              aria-label={choice.label}
+              sx={{
+                px: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                border: 'none',
+                color: themeName === 'dsp' ? '#39FF14' : 'inherit',
+                '&.Mui-selected': {
+                  backgroundColor: themeName === 'dsp' ? '#39FF14' : 'rgba(124, 252, 0, 0.2)',
+                  color: themeName === 'dsp' ? '#000000' : 'inherit',
+                  '&:hover': {
+                    backgroundColor: themeName === 'dsp' ? '#39FF14' : 'rgba(124, 252, 0, 0.3)',
+                  },
+                },
+              }}
+            >
+              {choice.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
       <Typography
         variant="h4"
         component="h1"
@@ -396,20 +524,21 @@ const VoiceInterface = () => {
         align="center"
         sx={{
           mb: 2,
-          background: 'linear-gradient(120deg, #7CFC00 0%, #1e88e5 45%, #8e24aa 85%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+          background: themeName === 'dsp' ? 'none' : palette.textGradient,
+          color: themeName === 'dsp' ? '#39FF14' : 'inherit',
+          WebkitBackgroundClip: themeName === 'dsp' ? 'unset' : 'text',
+          WebkitTextFillColor: themeName === 'dsp' ? '#39FF14' : 'transparent',
           fontWeight: 700,
           letterSpacing: 2,
           textTransform: 'uppercase',
-          textShadow: '0 0 30px rgba(124, 252, 0, 0.35)',
+          textShadow: palette.textShadow,
         }}
       >
         🎭 Teaser
       </Typography>
       <Typography
         variant="body1"
-        color="rgba(176, 190, 197, 0.9)"
+        color={themeName === 'dsp' ? '#39FF14' : 'rgba(176, 190, 197, 0.9)'}
         align="center"
         sx={{
           mb: 4,
@@ -418,7 +547,7 @@ const VoiceInterface = () => {
           lineHeight: 1.6,
           maxWidth: 520,
           mx: 'auto',
-          textShadow: '0 0 20px rgba(0, 188, 212, 0.25)',
+          textShadow: palette.bodyTextShadow,
         }}
       >
         Click "Start Teaser" to begin recording. Speak clearly, then click "Stop Recording" to process your audio.
@@ -429,9 +558,9 @@ const VoiceInterface = () => {
         sx={{
           p: 4,
           mb: 3,
-          background: 'linear-gradient(145deg, rgba(4, 2, 14, 0.85), rgba(13, 32, 61, 0.95))',
+          background: palette.panelBg,
           backdropFilter: 'blur(24px)',
-          border: '1px solid rgba(124, 252, 0, 0.2)',
+          border: palette.panelBorder,
           position: 'relative',
           overflow: 'hidden',
           '&::before': {
@@ -441,7 +570,10 @@ const VoiceInterface = () => {
             left: 0,
             right: 0,
             height: '2px',
-            background: 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
+            background:
+              themeName === 'dsp'
+                ? '#39FF14'
+                : 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
             backgroundSize: '200% 100%',
             animation: 'gradientShift 3s ease infinite',
           },
@@ -449,35 +581,40 @@ const VoiceInterface = () => {
             content: '""',
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(circle at 15% 20%, rgba(124,252,0,0.08), transparent 45%)',
+            background: palette.panelOverlay,
             pointerEvents: 'none',
           },
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 3 }}>
           {!isListening ? (
-          <Button
+            <Button
               variant="contained"
               color="primary"
-            size="large"
+              size="large"
               startIcon={<Mic />}
               onClick={startListening}
-            disabled={isProcessing}
+              disabled={isProcessing}
               sx={{
                 minWidth: 220,
                 minHeight: 70,
                 fontSize: '1.1rem',
                 borderRadius: '28px',
-                background: 'linear-gradient(120deg, #00B4DB 0%, #0083B0 45%, #7CFC00 100%)',
-                boxShadow: '0 18px 45px rgba(0, 131, 176, 0.45)',
+                background: palette.startGradient,
+                color: palette.startColor,
+                boxShadow: palette.startShadow,
                 '&:hover': {
-                  background: 'linear-gradient(120deg, #7CFC00 0%, #1d976c 60%, #00B4DB 100%)',
-                  boxShadow: '0 24px 55px rgba(124, 252, 0, 0.4)',
+                  background: palette.startHover,
+                  boxShadow:
+                    themeName === 'dsp'
+                      ? '0 0 30px rgba(57, 255, 20, 0.8)'
+                      : '0 24px 55px rgba(124, 252, 0, 0.4)',
                   transform: 'translateY(-3px)',
                 },
                 '&:disabled': {
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  color: 'rgba(255, 255, 255, 0.3)',
+                  background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.08)',
+                  color: themeName === 'dsp' ? '#39FF14' : 'rgba(255, 255, 255, 0.3)',
+                  border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
                 },
               }}
             >
@@ -488,25 +625,6 @@ const VoiceInterface = () => {
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<Mic />}
-                disabled
-                className="recording-pulse"
-                sx={{
-                  minWidth: 180,
-                  minHeight: 70,
-                  fontSize: '1.1rem',
-                  borderRadius: '25px',
-                  background: 'linear-gradient(120deg, #00c853 0%, #7CFC00 70%)',
-                  boxShadow: '0 15px 35px rgba(0, 200, 83, 0.35)',
-                  color: '#000',
-                  animation: 'pulse 2s infinite',
-                }}
-              >
-                Listening...
-              </Button>
-              <Button
-                variant="contained"
-                size="large"
                 startIcon={<Stop />}
                 onClick={stopListening}
                 sx={{
@@ -514,11 +632,15 @@ const VoiceInterface = () => {
                   minHeight: 70,
                   fontSize: '1.1rem',
                   borderRadius: '25px',
-                  background: 'linear-gradient(130deg, #6a11cb 0%, #b91372 80%)',
-                  boxShadow: '0 14px 30px rgba(185, 19, 114, 0.5)',
+                  background: palette.stopGradient,
+                  color: themeName === 'dsp' ? '#fff' : undefined,
+                  boxShadow: palette.stopShadow,
                   '&:hover': {
-                    background: 'linear-gradient(130deg, #b91372 0%, #ff758c 100%)',
-                    boxShadow: '0 20px 45px rgba(255, 117, 140, 0.45)',
+                    background: palette.stopHover,
+                    boxShadow:
+                      themeName === 'dsp'
+                        ? '0 0 30px rgba(57, 255, 20, 0.8)'
+                        : '0 20px 45px rgba(255, 117, 140, 0.45)',
                     transform: 'translateY(-3px)',
                   },
                 }}
@@ -551,11 +673,14 @@ const VoiceInterface = () => {
                 sx={{
                   height: 12,
                   borderRadius: 6,
-                  backgroundColor: 'rgba(4, 10, 26, 0.9)',
+                  backgroundColor: palette.progressTrack,
                   '& .MuiLinearProgress-bar': {
                     borderRadius: 6,
-                    background: 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
-                    boxShadow: '0 0 15px rgba(30, 136, 229, 0.4)',
+                    background: palette.progressBar,
+                    boxShadow:
+                      themeName === 'dsp'
+                        ? '0 0 15px rgba(57, 255, 20, 0.6)'
+                        : '0 0 15px rgba(30, 136, 229, 0.4)',
                   },
                 }}
               />
@@ -565,7 +690,7 @@ const VoiceInterface = () => {
                   top: -25,
                   left: `${audioLevel * 100}%`,
                   transform: 'translateX(-50%)',
-                  color: '#7CFC00',
+                  color: themeName === 'dsp' ? '#39FF14' : '#7CFC00',
                   fontSize: '1.5rem',
                   transition: 'left 0.1s ease-out',
                 }}
@@ -597,21 +722,21 @@ const VoiceInterface = () => {
               mb: 3,
               p: 2,
               borderRadius: 2,
-              background: 'linear-gradient(135deg, rgba(30, 136, 229, 0.15), rgba(142, 36, 170, 0.2))',
-              border: '1px solid rgba(124, 252, 0, 0.25)',
+              background: themeName === 'dsp' ? '#000000' : 'linear-gradient(135deg, rgba(30, 136, 229, 0.15), rgba(142, 36, 170, 0.2))',
+              border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.25)',
             }}
           >
             <CircularProgress
               size={50}
               sx={{
-                color: '#7CFC00',
+                color: themeName === 'dsp' ? '#39FF14' : '#7CFC00',
                 mb: 1,
               }}
             />
             <Typography
               variant="body1"
               sx={{
-                color: '#E3F2FD',
+                color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD',
                 fontWeight: 500,
                 textAlign: 'center',
               }}
@@ -620,7 +745,7 @@ const VoiceInterface = () => {
             </Typography>
             <Typography
               variant="body2"
-              color="text.secondary"
+              color={themeName === 'dsp' ? '#39FF14' : 'text.secondary'}
               sx={{ textAlign: 'center', mt: 0.5 }}
             >
               This may take a few seconds
@@ -634,11 +759,11 @@ const VoiceInterface = () => {
             sx={{
               mb: 3,
               borderRadius: 2,
-              background: 'rgba(244, 67, 54, 0.1)',
-              border: '1px solid rgba(244, 67, 54, 0.3)',
-              color: '#ffcdd2',
+              background: themeName === 'dsp' ? '#000000' : 'rgba(244, 67, 54, 0.1)',
+              border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(244, 67, 54, 0.3)',
+              color: themeName === 'dsp' ? '#39FF14' : '#ffcdd2',
               '& .MuiAlert-icon': {
-                color: '#f44336',
+                color: themeName === 'dsp' ? '#39FF14' : '#f44336',
               },
             }}
           >
@@ -651,14 +776,14 @@ const VoiceInterface = () => {
         <Card
           sx={{
             mb: 3,
-            background: 'linear-gradient(155deg, rgba(4,6,18,0.95), rgba(12,36,64,0.95))',
-            border: '1px solid rgba(124, 252, 0, 0.2)',
-            boxShadow: '0 20px 45px rgba(2,6,18,0.65)',
+            background: themeName === 'dsp' ? '#000000' : 'linear-gradient(155deg, rgba(4,6,18,0.95), rgba(12,36,64,0.95))',
+            border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.2)',
+            boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.4)' : '0 20px 45px rgba(2,6,18,0.65)',
           }}
         >
           <CardContent>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <GraphicEq sx={{ color: '#7CFC00' }} />
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: themeName === 'dsp' ? '#39FF14' : 'inherit' }}>
+              <GraphicEq sx={{ color: themeName === 'dsp' ? '#39FF14' : '#7CFC00' }} />
               Neural Telemetry
             </Typography>
             <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -697,19 +822,19 @@ const VoiceInterface = () => {
             mb: 3,
             p: 3,
             borderRadius: 3,
-            background: 'linear-gradient(135deg, rgba(11,30,61,0.9), rgba(53,16,67,0.85))',
-            border: '1px solid rgba(142, 36, 170, 0.35)',
-            boxShadow: '0 18px 40px rgba(4,5,20,0.7)',
+            background: themeName === 'dsp' ? '#000000' : 'linear-gradient(135deg, rgba(11,30,61,0.9), rgba(53,16,67,0.85))',
+            border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(142, 36, 170, 0.35)',
+            boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.3)' : '0 18px 40px rgba(4,5,20,0.7)',
           }}
         >
-          <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#E3F2FD', mb: 1 }}>
-            <Psychology fontSize="small" />
+          <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD', mb: 1 }}>
+            <Psychology fontSize="small" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />
             Chain of Thought
           </Typography>
           <Typography
             variant="body1"
             sx={{
-              color: 'rgba(227, 242, 253, 0.85)',
+              color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.85)',
               lineHeight: 1.7,
             }}
           >
@@ -725,20 +850,21 @@ const VoiceInterface = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                background: 'rgba(3,7,18,0.85)',
-                border: '1px solid rgba(144, 202, 249, 0.25)',
+                background: themeName === 'dsp' ? '#000000' : 'rgba(3,7,18,0.85)',
+                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(144, 202, 249, 0.25)',
+                boxShadow: themeName === 'dsp' ? '0 0 15px rgba(57, 255, 20, 0.3)' : 'none',
                 height: '100%',
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: '#90caf9', letterSpacing: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: themeName === 'dsp' ? '#39FF14' : '#90caf9', letterSpacing: 1 }}>
                 STT • {pipelineInsights?.stt?.model || 'Whisper'}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(227,242,253,0.6)' }}>
+              <Typography variant="caption" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227,242,253,0.6)' }}>
                 Device: {pipelineInsights?.stt?.device || 'cpu'} · Precision: {pipelineInsights?.stt?.compute_type || 'int8'}
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mt: 1.5, color: 'rgba(227, 242, 253, 0.8)' }}
+                sx={{ mt: 1.5, color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.8)' }}
               >
                 {pipelineInsights?.stt?.transcript || transcript || 'Awaiting speech input...'}
               </Typography>
@@ -749,20 +875,21 @@ const VoiceInterface = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                background: 'rgba(8,20,40,0.9)',
-                border: '1px solid rgba(124, 252, 0, 0.25)',
+                background: themeName === 'dsp' ? '#000000' : 'rgba(8,20,40,0.9)',
+                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.25)',
+                boxShadow: themeName === 'dsp' ? '0 0 15px rgba(57, 255, 20, 0.3)' : 'none',
                 height: '100%',
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: '#7CFC00', letterSpacing: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: themeName === 'dsp' ? '#39FF14' : '#7CFC00', letterSpacing: 1 }}>
                 LLM • {llmMetadata?.model || pipelineInsights?.llm?.model || '—'}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(227,242,253,0.6)' }}>
+              <Typography variant="caption" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227,242,253,0.6)' }}>
                 Tokens: {(llmMetadata?.token_usage?.total ?? pipelineInsights?.llm?.token_usage?.total ?? 0).toLocaleString()}
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mt: 1.5, color: 'rgba(227, 242, 253, 0.8)' }}
+                sx={{ mt: 1.5, color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.8)' }}
               >
                 {pipelineInsights?.llm?.answer || response || 'No response yet.'}
               </Typography>
@@ -773,20 +900,21 @@ const VoiceInterface = () => {
               sx={{
                 p: 3,
                 borderRadius: 3,
-                background: 'rgba(19,6,32,0.9)',
-                border: '1px solid rgba(244, 143, 177, 0.2)',
+                background: themeName === 'dsp' ? '#000000' : 'rgba(19,6,32,0.9)',
+                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(244, 143, 177, 0.2)',
+                boxShadow: themeName === 'dsp' ? '0 0 15px rgba(57, 255, 20, 0.3)' : 'none',
                 height: '100%',
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: '#f48fb1', letterSpacing: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: themeName === 'dsp' ? '#39FF14' : '#f48fb1', letterSpacing: 1 }}>
                 TTS • {pipelineInsights?.tts?.model || 'Piper'}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(227,242,253,0.6)' }}>
+              <Typography variant="caption" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227,242,253,0.6)' }}>
                 Speed {pipelineInsights?.tts?.speed ?? 1.0} · Bytes {(pipelineInsights?.tts?.audio_bytes ?? 0).toLocaleString()}
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mt: 1.5, color: 'rgba(227, 242, 253, 0.8)' }}
+                sx={{ mt: 1.5, color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.8)' }}
               >
                 Voice synthesis ready. Characters rendered: {pipelineInsights?.tts?.character_count ?? 0}.
               </Typography>
@@ -800,10 +928,13 @@ const VoiceInterface = () => {
           className="voice-agent-card"
           sx={{
             mb: 3,
-            background: 'linear-gradient(160deg, rgba(4, 5, 20, 0.9), rgba(13, 34, 66, 0.95))',
+            background: palette.cardBg,
             backdropFilter: 'blur(28px)',
-            border: '1px solid rgba(124, 252, 0, 0.18)',
-            boxShadow: '0 25px 60px rgba(4, 5, 20, 0.8)',
+            border: palette.cardBorder,
+            boxShadow:
+              themeName === 'dsp'
+                ? '0 0 25px rgba(57, 255, 20, 0.4)'
+                : '0 25px 60px rgba(4, 5, 20, 0.8)',
           }}
         >
           <CardContent
@@ -811,7 +942,7 @@ const VoiceInterface = () => {
               p: 3,
             }}
           >
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }}>
               Conversation
             </Typography>
 
@@ -822,8 +953,8 @@ const VoiceInterface = () => {
                   mb: 3,
                   p: 2,
                   borderRadius: 2,
-                  background: 'linear-gradient(135deg, rgba(30, 136, 229, 0.18), rgba(124, 252, 0, 0.18))',
-                  border: '1px solid rgba(124, 252, 0, 0.25)',
+                  background: palette.summaryBg,
+                  border: palette.summaryBorder,
                   position: 'relative',
                   overflow: 'hidden',
                   '&::before': {
@@ -833,26 +964,29 @@ const VoiceInterface = () => {
                     left: 0,
                     right: 0,
                     height: '2px',
-                    background: 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
+                    background:
+                      themeName === 'dsp'
+                        ? '#39FF14'
+                        : 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
                   },
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Summarize sx={{ mr: 1, fontSize: 20, color: '#90caf9' }} />
-                  <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 600 }}>
+                  <Summarize sx={{ mr: 1, fontSize: 20, color: themeName === 'dsp' ? '#39FF14' : '#90caf9' }} />
+                  <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 600, color: themeName === 'dsp' ? '#39FF14' : 'primary' }}>
                     ✨ Summary
                   </Typography>
                   {isSummarizing && (
                     <CircularProgress
                       size={18}
-                      sx={{ ml: 1, color: '#90caf9' }}
+                      sx={{ ml: 1, color: themeName === 'dsp' ? '#39FF14' : '#90caf9' }}
                     />
                   )}
                 </Box>
                 <Typography
                   variant="body1"
                   sx={{
-                    color: 'text.secondary',
+                    color: themeName === 'dsp' ? '#39FF14' : 'text.secondary',
                     fontStyle: 'italic',
                     lineHeight: 1.6,
                     opacity: 0.9,
@@ -866,28 +1000,33 @@ const VoiceInterface = () => {
             {/* Original Content Accordion */}
             <Accordion
               sx={{
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '12px !important',
                 '&:before': {
                   display: 'none',
                 },
                 '&.Mui-expanded': {
-                  background: 'rgba(255, 255, 255, 0.08)',
+                  background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.08)',
                 },
               }}
             >
               <AccordionSummary
-                expandIcon={<ExpandMore />}
+                expandIcon={<ExpandMore sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />}
                 aria-controls="conversation-content"
                 id="conversation-header"
               >
-                <Typography variant="subtitle1">View Details</Typography>
+                <Typography variant="subtitle1" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }}>View Details</Typography>
                 <Chip
                   label={`${transcript ? 'Transcript' : ''}${transcript && response ? ' + ' : ''}${response ? 'Response' : ''}`}
                   size="small"
-                  sx={{ ml: 1 }}
+                  sx={{ 
+                    ml: 1,
+                    backgroundColor: themeName === 'dsp' ? '#000000' : 'inherit',
+                    color: themeName === 'dsp' ? '#39FF14' : 'inherit',
+                    border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
+                  }}
                 />
               </AccordionSummary>
               <AccordionDetails>
@@ -896,7 +1035,7 @@ const VoiceInterface = () => {
                     <Typography
                       variant="subtitle1"
                       sx={{
-                        color: '#4caf50',
+                        color: themeName === 'dsp' ? '#39FF14' : '#4caf50',
                         fontWeight: 600,
                         mb: 1,
                         display: 'flex',
@@ -904,19 +1043,19 @@ const VoiceInterface = () => {
                       }}
                       gutterBottom
                     >
-                      <Mic sx={{ mr: 1, fontSize: 20 }} />
+                      <Mic sx={{ mr: 1, fontSize: 20, color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />
                       You said:
                     </Typography>
                     <Typography
                       variant="body1"
                       sx={{
                         p: 2,
-                        background: 'linear-gradient(135deg, rgba(124, 252, 0, 0.12), rgba(30, 136, 229, 0.12))',
-                        border: '1px solid rgba(124, 252, 0, 0.3)',
+                        background: palette.transcriptBg,
+                        border: palette.transcriptBorder,
                         borderRadius: 2,
-                        borderLeft: '4px solid #7CFC00',
+                        borderLeft: `4px solid ${palette.transcriptAccent}`,
                         lineHeight: 1.6,
-                        color: 'text.primary',
+                        color: themeName === 'dsp' ? '#39FF14' : 'text.primary',
                       }}
                     >
               {transcript}
@@ -929,7 +1068,7 @@ const VoiceInterface = () => {
                     <Typography
                       variant="subtitle1"
                       sx={{
-                        color: '#f48fb1',
+                        color: themeName === 'dsp' ? '#39FF14' : '#f48fb1',
                         fontWeight: 600,
                         mb: 1,
                         display: 'flex',
@@ -943,12 +1082,12 @@ const VoiceInterface = () => {
                       variant="body1"
                       sx={{
                         p: 2,
-                        background: 'linear-gradient(135deg, rgba(142, 36, 170, 0.12), rgba(30, 136, 229, 0.12))',
-                        border: '1px solid rgba(142, 36, 170, 0.25)',
+                        background: palette.responseBg,
+                        border: palette.responseBorder,
                         borderRadius: 2,
-                        borderLeft: '4px solid #8e24aa',
+                        borderLeft: `4px solid ${palette.responseAccent}`,
                         lineHeight: 1.6,
-                        color: 'text.primary',
+                        color: themeName === 'dsp' ? '#39FF14' : 'text.primary',
                         mb: 2,
                       }}
                     >
@@ -985,21 +1124,22 @@ const VoiceInterface = () => {
                           }
                         }}
                         sx={{
-                          background: 'linear-gradient(120deg, #1e88e5 0%, #7CFC00 90%)',
-                          color: '#01010b',
+                          background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #1e88e5 0%, #7CFC00 90%)',
+                          color: themeName === 'dsp' ? '#000000' : '#01010b',
                           fontWeight: 600,
                           borderRadius: '20px',
                           px: 3,
                           py: 1,
-                          boxShadow: '0 10px 25px rgba(30, 136, 229, 0.35)',
+                          boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.5)' : '0 10px 25px rgba(30, 136, 229, 0.35)',
                           '&:hover': {
-                            background: 'linear-gradient(120deg, #7CFC00 0%, #8e24aa 100%)',
-                            boxShadow: '0 15px 30px rgba(124, 252, 0, 0.35)',
+                            background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #7CFC00 0%, #8e24aa 100%)',
+                            boxShadow: themeName === 'dsp' ? '0 0 30px rgba(57, 255, 20, 0.8)' : '0 15px 30px rgba(124, 252, 0, 0.35)',
                             transform: 'translateY(-2px)',
                           },
                           '&:disabled': {
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            color: 'rgba(255, 255, 255, 0.35)',
+                            background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.08)',
+                            color: themeName === 'dsp' ? '#39FF14' : 'rgba(255, 255, 255, 0.35)',
+                            border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
                             boxShadow: 'none',
                           },
                           '&:active': {
@@ -1024,16 +1164,16 @@ const VoiceInterface = () => {
                           }
                         }}
                         sx={{
-                          background: 'linear-gradient(120deg, #8e24aa 0%, #311b92 90%)',
-                          color: '#fff',
+                          background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #8e24aa 0%, #311b92 90%)',
+                          color: themeName === 'dsp' ? '#000000' : '#fff',
                           fontWeight: 600,
                           borderRadius: '20px',
                           px: 3,
                           py: 1,
-                          boxShadow: '0 12px 28px rgba(49, 27, 146, 0.5)',
+                          boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.5)' : '0 12px 28px rgba(49, 27, 146, 0.5)',
                           '&:hover': {
-                            background: 'linear-gradient(120deg, #1e88e5 0%, #8e24aa 80%)',
-                            boxShadow: '0 18px 36px rgba(142, 36, 170, 0.4)',
+                            background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #1e88e5 0%, #8e24aa 80%)',
+                            boxShadow: themeName === 'dsp' ? '0 0 30px rgba(57, 255, 20, 0.8)' : '0 18px 36px rgba(142, 36, 170, 0.4)',
                             transform: 'translateY(-2px)',
                           },
                           '&:active': {
@@ -1053,29 +1193,29 @@ const VoiceInterface = () => {
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<History />}
-          onClick={toggleHistory}
-          sx={{
-            borderRadius: '25px',
-            px: 3,
-            py: 1,
-            border: '2px solid rgba(142, 36, 170, 0.6)',
-            color: '#E3F2FD',
-            background: 'rgba(4, 2, 14, 0.7)',
-            backdropFilter: 'blur(14px)',
-            '&:hover': {
-              background: 'rgba(142, 36, 170, 0.2)',
-              border: '2px solid #7CFC00',
-              transform: 'translateY(-2px)',
-              boxShadow: '0 15px 30px rgba(142, 36, 170, 0.35)',
-            },
-            transition: 'all 0.3s ease-in-out',
-          }}
-        >
-          Conversation History
-        </Button>
+          <Button
+            variant="outlined"
+            startIcon={<History sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />}
+            onClick={toggleHistory}
+            sx={{
+              borderRadius: '25px',
+              px: 3,
+              py: 1,
+              border: palette.historyBorder,
+              color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD',
+              background: palette.historyBg,
+              backdropFilter: 'blur(14px)',
+              '&:hover': {
+                background: palette.historyHoverBg,
+                border: palette.historyHoverBorder,
+                transform: 'translateY(-2px)',
+                boxShadow: palette.historyHoverShadow,
+              },
+              transition: 'all 0.3s ease-in-out',
+            }}
+          >
+            Conversation History
+          </Button>
       </Box>
 
       {showHistory && <ConversationHistory />}
