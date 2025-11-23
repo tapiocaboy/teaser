@@ -498,6 +498,7 @@ const VoiceInterface = () => {
                   borderRadius: '25px',
                   background: 'linear-gradient(120deg, #00c853 0%, #7CFC00 70%)',
                   boxShadow: '0 15px 35px rgba(0, 200, 83, 0.35)',
+                  color: '#000',
                   animation: 'pulse 2s infinite',
                 }}
               >
@@ -572,7 +573,11 @@ const VoiceInterface = () => {
                 🎵
               </Box>
             </Box>
-            <AudioVisualizer level={audioLevel} isActive={isListening} />
+            <AudioVisualizer
+              level={audioLevel}
+              isActive={isListening}
+              samples={visualizerStats.wavePoints}
+            />
             <WaveformVisualizer
               wavePoints={visualizerStats.wavePoints}
               amplitude={visualizerStats.amplitude}

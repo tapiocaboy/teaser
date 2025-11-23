@@ -111,9 +111,17 @@ class AudioService {
         this.analyser.getByteTimeDomainData(this.timeDomainArray);
       }
 
-      // Calculate average level
+      // Calculate audio level using waveform amplitude (gives more motion than frequency average)
       let level = 0;
-      if (this.frequencyArray && this.frequencyArray.length) {
+      if (this.timeDomainArray && this.timeDomainArray.length) {
+        let sum = 0;
+        for (let i = 0; i < this.timeDomainArray.length; i++) {
+          const sample = this.timeDomainArray[i] - 128;
+          sum += Math.abs(sample);
+        }
+        const avgAmplitude = sum / this.timeDomainArray.length;
+        level = Math.min(1, (avgAmplitude / 128) * 1.5); // normalize and scale for visual punch
+      } else if (this.frequencyArray && this.frequencyArray.length) {
         let sum = 0;
         for (let i = 0; i < this.frequencyArray.length; i++) {
           sum += this.frequencyArray[i];

@@ -8,7 +8,7 @@ const BAR_COUNT = 48;
  * to the current microphone level. The smoothing keeps the animation fluid
  * while still reflecting quick spikes in the signal.
  */
-const AudioVisualizer = ({ level = 0, isActive = false }) => {
+const AudioVisualizer = ({ level = 0, isActive = false, samples = [] }) => {
   const [smoothedLevel, setSmoothedLevel] = useState(0);
 
   useEffect(() => {
@@ -19,6 +19,18 @@ const AudioVisualizer = ({ level = 0, isActive = false }) => {
     () => Array.from({ length: BAR_COUNT }, () => 0.5 + Math.random()),
     []
   );
+
+  const normalizedSamples = useMemo(() => {
+    if (!samples || samples.length === 0) return null;
+    const chunkSize = Math.max(1, Math.floor(samples.length / BAR_COUNT));
+    return Array.from({ length: BAR_COUNT }, (_, idx) => {
+      const start = idx * chunkSize;
+      const slice = samples.slice(start, start + chunkSize);
+      if (slice.length === 0) return 0;
+      const peak = slice.reduce((max, sample) => Math.max(max, Math.abs(sample)), 0);
+      return Math.min(1, peak * 2.2); // align with waveform amplitude
+    });
+  }, [samples]);
 
   return (
     <Box
@@ -55,8 +67,14 @@ const AudioVisualizer = ({ level = 0, isActive = false }) => {
         }}
       >
         {barOffsets.map((bias, index) => {
-          const energy = Math.min(1, Math.max(0, smoothedLevel * (0.6 + bias)));
-          const height = 10 + energy * 90;
+          const sampleEnergy = normalizedSamples ? normalizedSamples[index] ?? smoothedLevel : smoothedLevel;
+          const syncedEnergy = Math.min(1, sampleEnergy * (1 + bias * 0.2));
+          const curved = isActive ? Math.pow(syncedEnergy, 0.8) : syncedEnergy;
+          const height = 6 + curved * 94;
+          const hueBase = 260 + (index / BAR_COUNT) * 90;
+          const gradientActive = `linear-gradient(180deg, hsla(${hueBase}, 90%, ${80 - curved * 15}%, 1) 0%, hsla(${hueBase + 20}, 85%, ${55 - curved * 5}%, 1) 60%, hsla(${hueBase + 35}, 80%, ${45 - curved * 2}%, 1) 100%)`;
+          const gradientIdle = `linear-gradient(180deg, hsla(${hueBase}, 45%, 78%, 0.9), hsla(${hueBase + 20}, 40%, 60%, 0.9))`;
+          const glowStrength = isActive ? 0.2 + curved * 0.7 : 0.15;
 
           return (
             <Box
@@ -67,14 +85,13 @@ const AudioVisualizer = ({ level = 0, isActive = false }) => {
                 maxWidth: '16px',
                 height: `${height}%`,
                 borderRadius: '999px',
-                transition: 'height 120ms ease, opacity 200ms ease',
-                background: isActive
-                  ? 'linear-gradient(180deg, #f3e5f5 0%, #ce93d8 40%, #7b1fa2 100%)'
-                  : 'linear-gradient(180deg, #d1c4e9 0%, #9575cd 100%)',
-                opacity: isActive ? 0.95 : 0.6,
-                filter: isActive
-                  ? 'drop-shadow(0 0 8px rgba(123, 31, 162, 0.5))'
-                  : 'none',
+                transition: 'height 85ms ease-out, opacity 200ms ease, box-shadow 200ms ease',
+                background: isActive ? gradientActive : gradientIdle,
+                opacity: isActive ? 0.98 : 0.65,
+                boxShadow: isActive
+                  ? `0 0 ${12 + curved * 20}px hsla(${hueBase + 15}, 85%, 65%, ${glowStrength})`
+                  : '0 0 6px rgba(149, 117, 205, 0.25)',
+                transform: `translateY(${(1 - curved) * 1.5}px)`,
               }}
             />
           );
