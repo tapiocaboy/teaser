@@ -1,4 +1,4 @@
-# Teaser 🎭
+# Echo 🎭
 
 **Local, privacy-first voice assistant with real-time STT, LLM inference, and TTS synthesis.**
 

@@ -1,5 +1,5 @@
 """
-Database Models for Teaser
+Database Models for Echo
 """
 import os
 from datetime import datetime

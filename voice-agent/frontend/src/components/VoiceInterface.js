@@ -14,8 +14,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
-  ToggleButtonGroup,
-  ToggleButton,
 } from '@mui/material';
 import {
   Mic,
@@ -34,6 +32,8 @@ import ApiService from '../services/ApiService';
 import ConversationHistory from './ConversationHistory';
 import AudioVisualizer from './AudioVisualizer';
 import WaveformVisualizer from './WaveformVisualizer';
+import ThemeSelector from './ThemeSelector';
+import { useTheme } from '../contexts/ThemeContext';
 
 const INITIAL_VISUALIZER_STATE = {
   wavePoints: new Array(64).fill(0),
@@ -42,121 +42,10 @@ const INITIAL_VISUALIZER_STATE = {
   wavelength: 0,
 };
 
-const THEME_CHOICES = [
-  { value: 'neon', label: 'Neon Pulse' },
-  { value: 'dsp', label: 'DSP Matrix' },
-  { value: 'synthwave', label: 'Synthwave Dream' },
-];
+// Theme is now managed via CSS variables and ThemeContext
 
-const themeStyles = {
-  synthwave: {
-    textGradient: 'linear-gradient(135deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%)',
-    panelBg: 'linear-gradient(145deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))',
-    panelBorder: '2px solid rgba(255, 0, 110, 0.4)',
-    panelOverlay: 'radial-gradient(circle at 25% 25%, rgba(255,0,110,0.1), transparent 50%)',
-    startGradient: 'linear-gradient(135deg, #ff006e 0%, #8338ec 100%)',
-    startHover: 'linear-gradient(135deg, #ff3385 0%, #9d5ff0 100%)',
-    startColor: '#ffbe0b',
-    startShadow: '0 0 30px rgba(255, 0, 110, 0.6)',
-    listeningGradient: 'linear-gradient(135deg, #ff006e 0%, #fb5607 100%)',
-    listeningShadow: '0 0 30px rgba(255, 0, 110, 0.6)',
-    listeningText: '#ffbe0b',
-    stopGradient: 'linear-gradient(135deg, #8338ec 0%, #3a86ff 100%)',
-    stopHover: 'linear-gradient(135deg, #9d5ff0 0%, #5ca3ff 100%)',
-    stopShadow: '0 0 30px rgba(131, 56, 236, 0.6)',
-    progressTrack: 'rgba(255, 0, 110, 0.2)',
-    progressBar: 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)',
-    summaryBg: 'linear-gradient(135deg, rgba(255,0,110,0.15), rgba(131,56,236,0.15))',
-    summaryBorder: '2px solid rgba(255, 0, 110, 0.3)',
-    cardBg: 'linear-gradient(150deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))',
-    cardBorder: '2px solid rgba(131, 56, 236, 0.3)',
-    transcriptBg: 'linear-gradient(135deg, rgba(255,0,110,0.15), rgba(131,56,236,0.1))',
-    transcriptBorder: '2px solid rgba(255, 0, 110, 0.3)',
-    transcriptAccent: '#ff006e',
-    responseBg: 'linear-gradient(135deg, rgba(131,56,236,0.15), rgba(58,134,255,0.1))',
-    responseBorder: '2px solid rgba(131, 56, 236, 0.3)',
-    responseAccent: '#8338ec',
-    historyBorder: '2px solid rgba(255, 0, 110, 0.5)',
-    historyBg: 'rgba(15,8,32,0.9)',
-    historyHoverBg: 'rgba(255, 0, 110, 0.15)',
-    historyHoverBorder: '2px solid #ff006e',
-    historyHoverShadow: '0 0 30px rgba(255, 0, 110, 0.4)',
-    textShadow: '0 0 20px rgba(255, 0, 110, 0.4)',
-    bodyTextShadow: '0 0 15px rgba(131, 56, 236, 0.3)',
-  },
-  neon: {
-    textGradient: 'linear-gradient(120deg, #7CFC00 0%, #1e88e5 45%, #8e24aa 85%)',
-    panelBg: 'linear-gradient(145deg, rgba(4, 2, 14, 0.85), rgba(13, 32, 61, 0.95))',
-    panelBorder: '1px solid rgba(124, 252, 0, 0.2)',
-    panelOverlay: 'radial-gradient(circle at 15% 20%, rgba(124,252,0,0.08), transparent 45%)',
-    startGradient: 'linear-gradient(120deg, #7CFC00 0%, #1e88e5 60%)',
-    startHover: 'linear-gradient(120deg, #7CFC00 0%, #1d976c 60%, #00B4DB 100%)',
-    startColor: '#ffffff',
-    startShadow: '0 18px 45px rgba(0, 131, 176, 0.45)',
-    listeningGradient: 'linear-gradient(120deg, #00c853 0%, #7CFC00 70%)',
-    listeningShadow: '0 15px 35px rgba(0, 200, 83, 0.35)',
-    listeningText: '#01010b',
-    stopGradient: 'linear-gradient(130deg, #6a11cb 0%, #b91372 80%)',
-    stopHover: 'linear-gradient(130deg, #b91372 0%, #ff758c 100%)',
-    stopShadow: '0 14px 30px rgba(185, 19, 114, 0.5)',
-    progressTrack: 'rgba(255, 255, 255, 0.1)',
-    progressBar: 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
-    summaryBg: 'linear-gradient(135deg, rgba(30, 136, 229, 0.18), rgba(124, 252, 0, 0.18))',
-    summaryBorder: '1px solid rgba(124, 252, 0, 0.25)',
-    cardBg: 'linear-gradient(160deg, rgba(4, 5, 20, 0.9), rgba(13, 34, 66, 0.95))',
-    cardBorder: '1px solid rgba(124, 252, 0, 0.18)',
-    transcriptBg: 'linear-gradient(135deg, rgba(124, 252, 0, 0.12), rgba(30, 136, 229, 0.12))',
-    transcriptBorder: '1px solid rgba(124, 252, 0, 0.3)',
-    transcriptAccent: '#7CFC00',
-    responseBg: 'linear-gradient(135deg, rgba(142, 36, 170, 0.12), rgba(30, 136, 229, 0.12))',
-    responseBorder: '1px solid rgba(142, 36, 170, 0.25)',
-    responseAccent: '#8e24aa',
-    historyBorder: '2px solid rgba(142, 36, 170, 0.6)',
-    historyBg: 'rgba(4, 2, 14, 0.7)',
-    historyHoverBg: 'rgba(142, 36, 170, 0.2)',
-    historyHoverBorder: '2px solid #7CFC00',
-    historyHoverShadow: '0 15px 30px rgba(142, 36, 170, 0.35)',
-    textShadow: '0 0 30px rgba(124, 252, 0, 0.35)',
-    bodyTextShadow: '0 0 20px rgba(0, 188, 212, 0.25)',
-  },
-  dsp: {
-    textGradient: 'none',
-    panelBg: '#000000',
-    panelBorder: '1px solid #39FF14',
-    panelOverlay: 'none',
-    startGradient: '#39FF14',
-    startHover: '#39FF14',
-    startColor: '#000000',
-    startShadow: '0 0 20px rgba(57, 255, 20, 0.6)',
-    listeningGradient: '#39FF14',
-    listeningShadow: '0 0 20px rgba(57, 255, 20, 0.6)',
-    listeningText: '#000000',
-    stopGradient: '#39FF14',
-    stopHover: '#39FF14',
-    stopShadow: '0 0 20px rgba(57, 255, 20, 0.6)',
-    progressTrack: '#000000',
-    progressBar: '#39FF14',
-    summaryBg: '#000000',
-    summaryBorder: '1px solid #39FF14',
-    cardBg: '#000000',
-    cardBorder: '1px solid #39FF14',
-    transcriptBg: '#000000',
-    transcriptBorder: '1px solid #39FF14',
-    transcriptAccent: '#39FF14',
-    responseBg: '#000000',
-    responseBorder: '1px solid #39FF14',
-    responseAccent: '#39FF14',
-    historyBorder: '2px solid #39FF14',
-    historyBg: '#000000',
-    historyHoverBg: '#000000',
-    historyHoverBorder: '2px solid #39FF14',
-    historyHoverShadow: '0 0 25px rgba(57, 255, 20, 0.5)',
-    textShadow: '0 0 15px rgba(57, 255, 20, 0.5)',
-    bodyTextShadow: '0 0 10px rgba(57, 255, 20, 0.3)',
-  },
-};
-
-const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
+const VoiceInterface = () => {
+  const { theme, currentTheme } = useTheme();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -175,14 +64,13 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
   const audioService = useRef(new AudioService());
   const apiService = useRef(new ApiService());
 
-  const palette = useMemo(
-    () => themeStyles[themeName] || themeStyles.neon,
-    [themeName]
-  );
+  // Check if current theme is a "retro" style that needs special handling
+  const isRetroTheme = theme === 'retro-90s';
+  const isMatrixTheme = theme === 'ai-matrix';
 
   // WebSocket connection removed - using HTTP API instead
   useEffect(() => {
-    console.log('Teaser initialized - ready to process audio');
+    console.log('Echo initialized - ready to process audio');
   }, []);
 
 
@@ -478,71 +366,29 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
     setShowHistory(!showHistory);
   };
 
-  const InsightCard = ({ icon, title, value, footer, gradient }) => {
-    const cardBg = themeName === 'dsp' 
-      ? '#000000' 
-      : themeName === 'synthwave'
-      ? 'linear-gradient(145deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))'
-      : (gradient || 'linear-gradient(145deg, rgba(3,7,18,0.9), rgba(11,25,48,0.95))');
-    
-    const cardBorder = themeName === 'dsp' 
-      ? '1px solid #39FF14' 
-      : themeName === 'synthwave'
-      ? '2px solid rgba(255, 0, 110, 0.4)'
-      : '1px solid rgba(124, 252, 0, 0.2)';
-    
-    const cardShadow = themeName === 'dsp' 
-      ? '0 0 20px rgba(57, 255, 20, 0.3)' 
-      : themeName === 'synthwave'
-      ? '0 0 30px rgba(255, 0, 110, 0.3)'
-      : '0 15px 40px rgba(3,7,18,0.55)';
-    
-    const iconColor = themeName === 'dsp' 
-      ? '#39FF14' 
-      : themeName === 'synthwave'
-      ? '#ff006e'
-      : icon.props.sx?.color;
-    
-    const titleColor = themeName === 'dsp' 
-      ? '#39FF14' 
-      : themeName === 'synthwave'
-      ? '#ffbe0b'
-      : '#E3F2FD';
-    
-    const valueColor = themeName === 'dsp' 
-      ? '#39FF14' 
-      : themeName === 'synthwave'
-      ? '#ff006e'
-      : '#7CFC00';
-    
-    const footerColor = themeName === 'dsp' 
-      ? '#39FF14' 
-      : themeName === 'synthwave'
-      ? '#8338ec'
-      : 'rgba(227, 242, 253, 0.7)';
-
+  const InsightCard = ({ icon, title, value, footer }) => {
     return (
       <Box
         sx={{
           p: 3,
-          borderRadius: 3,
-          background: cardBg,
-          border: cardBorder,
-          boxShadow: cardShadow,
+          borderRadius: isRetroTheme ? 0 : 3,
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           minHeight: 140,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          {React.cloneElement(icon, { sx: { color: iconColor } })}
-          <Typography variant="subtitle2" sx={{ letterSpacing: 1, color: titleColor }}>
+          {React.cloneElement(icon, { sx: { color: 'var(--primary)' } })}
+          <Typography variant="subtitle2" sx={{ letterSpacing: 1, color: 'var(--foreground)' }}>
             {title}
           </Typography>
         </Box>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: valueColor }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: 'var(--primary)' }}>
           {value}
         </Typography>
         {footer && (
-          <Typography variant="body2" sx={{ color: footerColor, mt: 1 }}>
+          <Typography variant="body2" sx={{ color: 'var(--muted-foreground)', mt: 1 }}>
             {footer}
           </Typography>
         )}
@@ -554,75 +400,11 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
 
   return (
     <Box sx={{ maxWidth: 960, mx: 'auto', position: 'relative', width: '100%' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-        <ToggleButtonGroup
-          value={themeName}
-          exclusive
-          size="small"
-          onChange={(event, value) => {
-            if (value && onThemeChange) {
-              onThemeChange(value);
-            }
-          }}
-          aria-label="Theme selection"
-          sx={{
-            background: themeName === 'dsp' 
-              ? '#000000' 
-              : themeName === 'synthwave'
-              ? 'rgba(15, 8, 32, 0.8)'
-              : 'rgba(255,255,255,0.05)',
-            border: themeName === 'dsp' 
-              ? '1px solid #39FF14' 
-              : themeName === 'synthwave'
-              ? '2px solid rgba(255, 0, 110, 0.4)'
-              : 'none',
-            borderRadius: '999px',
-            p: 0.5,
-            boxShadow: themeName === 'synthwave' ? '0 0 20px rgba(255, 0, 110, 0.3)' : 'none',
-          }}
-        >
-          {THEME_CHOICES.map((choice) => (
-            <ToggleButton
-              key={choice.value}
-              value={choice.value}
-              aria-label={choice.label}
-              sx={{
-                px: 2,
-                textTransform: 'none',
-                fontWeight: 600,
-                border: 'none',
-                color: themeName === 'dsp' 
-                  ? '#39FF14' 
-                  : themeName === 'synthwave'
-                  ? '#ffbe0b'
-                  : 'inherit',
-                '&.Mui-selected': {
-                  backgroundColor: themeName === 'dsp' 
-                    ? '#39FF14' 
-                    : themeName === 'synthwave'
-                    ? 'rgba(255, 0, 110, 0.3)'
-                    : 'rgba(124, 252, 0, 0.2)',
-                  color: themeName === 'dsp' 
-                    ? '#000000' 
-                    : themeName === 'synthwave'
-                    ? '#ffbe0b'
-                    : 'inherit',
-                  boxShadow: themeName === 'synthwave' ? '0 0 15px rgba(255, 0, 110, 0.5)' : 'none',
-                  '&:hover': {
-                    backgroundColor: themeName === 'dsp' 
-                      ? '#39FF14' 
-                      : themeName === 'synthwave'
-                      ? 'rgba(255, 0, 110, 0.4)'
-                      : 'rgba(124, 252, 0, 0.3)',
-                  },
-                },
-              }}
-            >
-              {choice.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+      {/* Theme Selector */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <ThemeSelector />
       </Box>
+      
       <Typography
         variant="h4"
         component="h1"
@@ -630,44 +412,41 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
         align="center"
         sx={{
           mb: 2,
-          background: themeName === 'dsp' ? 'none' : palette.textGradient,
-          color: themeName === 'dsp' ? '#39FF14' : 'inherit',
-          WebkitBackgroundClip: themeName === 'dsp' ? 'unset' : 'text',
-          WebkitTextFillColor: themeName === 'dsp' ? '#39FF14' : 'transparent',
+          color: 'var(--primary)',
           fontWeight: 700,
           letterSpacing: 2,
           textTransform: 'uppercase',
-          textShadow: palette.textShadow,
-          filter: themeName === 'synthwave' ? 'drop-shadow(0 0 10px rgba(255, 0, 110, 0.5))' : 'none',
+          textShadow: isMatrixTheme ? '0 0 20px var(--primary)' : 'none',
         }}
       >
-        🎭 Teaser
+        {currentTheme?.icon || '🎭'} Echo
       </Typography>
       <Typography
         variant="body1"
-        color={themeName === 'dsp' ? '#39FF14' : themeName === 'synthwave' ? '#ffbe0b' : 'rgba(176, 190, 197, 0.9)'}
         align="center"
         sx={{
           mb: 4,
-          opacity: 0.95,
+          opacity: 0.9,
           fontSize: '1.1rem',
           lineHeight: 1.6,
           maxWidth: 520,
           mx: 'auto',
-          textShadow: palette.bodyTextShadow,
+          color: 'var(--muted-foreground)',
         }}
       >
-        Click "Start Teaser" to begin recording. Speak clearly, then click "Stop Recording" to process your audio.
+        Click "Start Echo" to begin recording. Speak clearly, then click "Stop Recording" to process your audio.
       </Typography>
 
       <Paper
         elevation={0}
+        className="echo-card"
         sx={{
           p: 4,
           mb: 3,
-          background: palette.panelBg,
-          backdropFilter: 'blur(24px)',
-          border: palette.panelBorder,
+          background: 'var(--card)',
+          backdropFilter: isRetroTheme ? 'none' : 'blur(24px)',
+          border: '1px solid var(--border)',
+          borderRadius: isRetroTheme ? 0 : 3,
           position: 'relative',
           overflow: 'hidden',
           '&::before': {
@@ -677,21 +456,7 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
             left: 0,
             right: 0,
             height: '2px',
-            background:
-              themeName === 'dsp'
-                ? '#39FF14'
-                : themeName === 'synthwave'
-                ? 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)'
-                : 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
-            backgroundSize: '200% 100%',
-            animation: 'gradientShift 3s ease infinite',
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            background: palette.panelOverlay,
-            pointerEvents: 'none',
+            background: 'var(--primary)',
           },
         }}
       >
@@ -704,63 +469,56 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
               startIcon={<Mic />}
               onClick={startListening}
               disabled={isProcessing}
+              className="echo-button-primary"
               sx={{
                 minWidth: 220,
                 minHeight: 70,
                 fontSize: '1.1rem',
-                borderRadius: '28px',
-                background: palette.startGradient,
-                color: palette.startColor,
-                boxShadow: palette.startShadow,
+                borderRadius: isRetroTheme ? 0 : '28px',
+                background: 'var(--primary)',
+                color: 'var(--primary-foreground)',
+                boxShadow: '0 0 20px color-mix(in oklch, var(--primary) 40%, transparent)',
+                transition: 'all 0.3s ease',
                 '&:hover': {
-                  background: palette.startHover,
-                  boxShadow:
-                    themeName === 'dsp'
-                      ? '0 0 30px rgba(57, 255, 20, 0.8)'
-                      : themeName === 'synthwave'
-                      ? '0 0 40px rgba(255, 0, 110, 0.8)'
-                      : '0 24px 55px rgba(124, 252, 0, 0.4)',
+                  background: 'var(--primary)',
+                  filter: 'brightness(1.1)',
+                  boxShadow: '0 0 30px color-mix(in oklch, var(--primary) 60%, transparent)',
                   transform: 'translateY(-3px)',
                 },
                 '&:disabled': {
-                  background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.08)',
-                  color: themeName === 'dsp' ? '#39FF14' : 'rgba(255, 255, 255, 0.3)',
-                  border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
+                  background: 'var(--muted)',
+                  color: 'var(--muted-foreground)',
                 },
               }}
             >
-              Start Teaser
+              Start Echo
             </Button>
           ) : (
-            <>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<Stop />}
-                onClick={stopListening}
-                sx={{
-                  minWidth: 180,
-                  minHeight: 70,
-                  fontSize: '1.1rem',
-                  borderRadius: '25px',
-                  background: palette.stopGradient,
-                  color: themeName === 'dsp' ? '#fff' : undefined,
-                  boxShadow: palette.stopShadow,
-                  '&:hover': {
-                    background: palette.stopHover,
-                    boxShadow:
-                      themeName === 'dsp'
-                        ? '0 0 30px rgba(57, 255, 20, 0.8)'
-                        : themeName === 'synthwave'
-                        ? '0 0 40px rgba(131, 56, 236, 0.8)'
-                        : '0 20px 45px rgba(255, 117, 140, 0.45)',
-                    transform: 'translateY(-3px)',
-                  },
-                }}
-              >
-                Stop Recording
-          </Button>
-            </>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Stop />}
+              onClick={stopListening}
+              className="echo-button-primary"
+              sx={{
+                minWidth: 180,
+                minHeight: 70,
+                fontSize: '1.1rem',
+                borderRadius: isRetroTheme ? 0 : '25px',
+                background: 'var(--destructive)',
+                color: 'var(--primary-foreground)',
+                boxShadow: '0 0 20px color-mix(in oklch, var(--destructive) 40%, transparent)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'var(--destructive)',
+                  filter: 'brightness(1.1)',
+                  boxShadow: '0 0 30px color-mix(in oklch, var(--destructive) 60%, transparent)',
+                  transform: 'translateY(-3px)',
+                },
+              }}
+            >
+              Stop Recording
+            </Button>
           )}
         </Box>
 
@@ -768,34 +526,28 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
           <Box sx={{ mb: 3, textAlign: 'center' }}>
             <Typography
               variant="body1"
-              color="primary"
               align="center"
               gutterBottom
               sx={{
                 fontSize: '1.1rem',
                 fontWeight: 500,
-                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                color: 'var(--primary)',
               }}
             >
               🎤 Listening... Speak now
             </Typography>
             <Box sx={{ position: 'relative', mt: 2 }}>
-            <LinearProgress
-              variant="determinate"
-              value={audioLevel * 100}
+              <LinearProgress
+                variant="determinate"
+                value={audioLevel * 100}
                 sx={{
                   height: 12,
-                  borderRadius: 6,
-                  backgroundColor: palette.progressTrack,
+                  borderRadius: isRetroTheme ? 0 : 6,
+                  backgroundColor: 'var(--muted)',
                   '& .MuiLinearProgress-bar': {
-                    borderRadius: 6,
-                    background: palette.progressBar,
-                    boxShadow:
-                      themeName === 'dsp'
-                        ? '0 0 15px rgba(57, 255, 20, 0.6)'
-                        : themeName === 'synthwave'
-                        ? '0 0 20px rgba(255, 0, 110, 0.6)'
-                        : '0 0 15px rgba(30, 136, 229, 0.4)',
+                    borderRadius: isRetroTheme ? 0 : 6,
+                    background: 'var(--primary)',
+                    boxShadow: '0 0 15px color-mix(in oklch, var(--primary) 60%, transparent)',
                   },
                 }}
               />
@@ -805,7 +557,6 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                   top: -25,
                   left: `${audioLevel * 100}%`,
                   transform: 'translateX(-50%)',
-                  color: themeName === 'dsp' ? '#39FF14' : '#7CFC00',
                   fontSize: '1.5rem',
                   transition: 'left 0.1s ease-out',
                 }}
@@ -836,22 +587,22 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
               alignItems: 'center',
               mb: 3,
               p: 2,
-              borderRadius: 2,
-              background: themeName === 'dsp' ? '#000000' : 'linear-gradient(135deg, rgba(30, 136, 229, 0.15), rgba(142, 36, 170, 0.2))',
-              border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.25)',
+              borderRadius: isRetroTheme ? 0 : 2,
+              background: 'var(--accent)',
+              border: '1px solid var(--border)',
             }}
           >
             <CircularProgress
               size={50}
               sx={{
-                color: themeName === 'dsp' ? '#39FF14' : '#7CFC00',
+                color: 'var(--primary)',
                 mb: 1,
               }}
             />
             <Typography
               variant="body1"
               sx={{
-                color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD',
+                color: 'var(--foreground)',
                 fontWeight: 500,
                 textAlign: 'center',
               }}
@@ -860,8 +611,7 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
             </Typography>
             <Typography
               variant="body2"
-              color={themeName === 'dsp' ? '#39FF14' : 'text.secondary'}
-              sx={{ textAlign: 'center', mt: 0.5 }}
+              sx={{ textAlign: 'center', mt: 0.5, color: 'var(--muted-foreground)' }}
             >
               This may take a few seconds
             </Typography>
@@ -873,12 +623,12 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
             severity="error"
             sx={{
               mb: 3,
-              borderRadius: 2,
-              background: themeName === 'dsp' ? '#000000' : 'rgba(244, 67, 54, 0.1)',
-              border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(244, 67, 54, 0.3)',
-              color: themeName === 'dsp' ? '#39FF14' : '#ffcdd2',
+              borderRadius: isRetroTheme ? 0 : 2,
+              background: 'color-mix(in oklch, var(--destructive) 10%, var(--card))',
+              border: '1px solid var(--destructive)',
+              color: 'var(--foreground)',
               '& .MuiAlert-icon': {
-                color: themeName === 'dsp' ? '#39FF14' : '#f44336',
+                color: 'var(--destructive)',
               },
             }}
           >
@@ -889,23 +639,13 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
 
       {llmMetadata && (
         <Card
+          className="echo-card"
           sx={{
             mb: 3,
-            background: themeName === 'dsp' 
-              ? '#000000' 
-              : themeName === 'synthwave'
-              ? 'linear-gradient(155deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))'
-              : 'linear-gradient(155deg, rgba(4,6,18,0.95), rgba(12,36,64,0.95))',
-            border: themeName === 'dsp' 
-              ? '1px solid #39FF14' 
-              : themeName === 'synthwave'
-              ? '2px solid rgba(255, 0, 110, 0.4)'
-              : '1px solid rgba(124, 252, 0, 0.2)',
-            boxShadow: themeName === 'dsp' 
-              ? '0 0 20px rgba(57, 255, 20, 0.4)' 
-              : themeName === 'synthwave'
-              ? '0 0 35px rgba(255, 0, 110, 0.4)'
-              : '0 20px 45px rgba(2,6,18,0.65)',
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: isRetroTheme ? 0 : 3,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           }}
         >
           <CardContent>
@@ -913,19 +653,9 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
               display: 'flex', 
               alignItems: 'center', 
               gap: 1, 
-              color: themeName === 'dsp' 
-                ? '#39FF14' 
-                : themeName === 'synthwave'
-                ? '#ffbe0b'
-                : 'inherit' 
+              color: 'var(--foreground)',
             }}>
-              <GraphicEq sx={{ 
-                color: themeName === 'dsp' 
-                  ? '#39FF14' 
-                  : themeName === 'synthwave'
-                  ? '#ff006e'
-                  : '#7CFC00' 
-              }} />
+              <GraphicEq sx={{ color: 'var(--primary)' }} />
               Neural Telemetry
             </Typography>
             <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -960,55 +690,30 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
 
       {llmMetadata && (
         <Paper
+          className="echo-card"
           sx={{
             mb: 3,
             p: 3,
-            borderRadius: 3,
-            background: themeName === 'dsp' 
-              ? '#000000' 
-              : themeName === 'synthwave'
-              ? 'linear-gradient(135deg, rgba(15,8,32,0.9), rgba(50,20,70,0.85))'
-              : 'linear-gradient(135deg, rgba(11,30,61,0.9), rgba(53,16,67,0.85))',
-            border: themeName === 'dsp' 
-              ? '1px solid #39FF14' 
-              : themeName === 'synthwave'
-              ? '2px solid rgba(131, 56, 236, 0.4)'
-              : '1px solid rgba(142, 36, 170, 0.35)',
-            boxShadow: themeName === 'dsp' 
-              ? '0 0 20px rgba(57, 255, 20, 0.3)' 
-              : themeName === 'synthwave'
-              ? '0 0 30px rgba(131, 56, 236, 0.4)'
-              : '0 18px 40px rgba(4,5,20,0.7)',
+            borderRadius: isRetroTheme ? 0 : 3,
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           }}
         >
           <Typography variant="subtitle1" sx={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: 1, 
-            color: themeName === 'dsp' 
-              ? '#39FF14' 
-              : themeName === 'synthwave'
-              ? '#ffbe0b'
-              : '#E3F2FD', 
+            color: 'var(--foreground)', 
             mb: 1 
           }}>
-            <Psychology fontSize="small" sx={{ 
-              color: themeName === 'dsp' 
-                ? '#39FF14' 
-                : themeName === 'synthwave'
-                ? '#8338ec'
-                : 'inherit' 
-            }} />
+            <Psychology fontSize="small" sx={{ color: 'var(--primary)' }} />
             Chain of Thought
           </Typography>
           <Typography
             variant="body1"
             sx={{
-              color: themeName === 'dsp' 
-                ? '#39FF14' 
-                : themeName === 'synthwave'
-                ? '#ffbe0b'
-                : 'rgba(227, 242, 253, 0.85)',
+              color: 'var(--muted-foreground)',
               lineHeight: 1.7,
             }}
           >
@@ -1021,24 +726,24 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} md={4}>
             <Paper
+              className="echo-card"
               sx={{
                 p: 3,
-                borderRadius: 3,
-                background: themeName === 'dsp' ? '#000000' : 'rgba(3,7,18,0.85)',
-                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(144, 202, 249, 0.25)',
-                boxShadow: themeName === 'dsp' ? '0 0 15px rgba(57, 255, 20, 0.3)' : 'none',
+                borderRadius: isRetroTheme ? 0 : 3,
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
                 height: '100%',
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: themeName === 'dsp' ? '#39FF14' : '#90caf9', letterSpacing: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'var(--primary)', letterSpacing: 1 }}>
                 STT • {pipelineInsights?.stt?.model || 'Whisper'}
               </Typography>
-              <Typography variant="caption" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227,242,253,0.6)' }}>
+              <Typography variant="caption" sx={{ color: 'var(--muted-foreground)' }}>
                 Device: {pipelineInsights?.stt?.device || 'cpu'} · Precision: {pipelineInsights?.stt?.compute_type || 'int8'}
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mt: 1.5, color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.8)' }}
+                sx={{ mt: 1.5, color: 'var(--foreground)' }}
               >
                 {pipelineInsights?.stt?.transcript || transcript || 'Awaiting speech input...'}
               </Typography>
@@ -1046,24 +751,24 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
           </Grid>
           <Grid item xs={12} md={4}>
             <Paper
+              className="echo-card"
               sx={{
                 p: 3,
-                borderRadius: 3,
-                background: themeName === 'dsp' ? '#000000' : 'rgba(8,20,40,0.9)',
-                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(124, 252, 0, 0.25)',
-                boxShadow: themeName === 'dsp' ? '0 0 15px rgba(57, 255, 20, 0.3)' : 'none',
+                borderRadius: isRetroTheme ? 0 : 3,
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
                 height: '100%',
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: themeName === 'dsp' ? '#39FF14' : '#7CFC00', letterSpacing: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'var(--primary)', letterSpacing: 1 }}>
                 LLM • {llmMetadata?.model || pipelineInsights?.llm?.model || '—'}
               </Typography>
-              <Typography variant="caption" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227,242,253,0.6)' }}>
+              <Typography variant="caption" sx={{ color: 'var(--muted-foreground)' }}>
                 Tokens: {(llmMetadata?.token_usage?.total ?? pipelineInsights?.llm?.token_usage?.total ?? 0).toLocaleString()}
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mt: 1.5, color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.8)' }}
+                sx={{ mt: 1.5, color: 'var(--foreground)' }}
               >
                 {pipelineInsights?.llm?.answer || response || 'No response yet.'}
               </Typography>
@@ -1071,24 +776,24 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
           </Grid>
           <Grid item xs={12} md={4}>
             <Paper
+              className="echo-card"
               sx={{
                 p: 3,
-                borderRadius: 3,
-                background: themeName === 'dsp' ? '#000000' : 'rgba(19,6,32,0.9)',
-                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(244, 143, 177, 0.2)',
-                boxShadow: themeName === 'dsp' ? '0 0 15px rgba(57, 255, 20, 0.3)' : 'none',
+                borderRadius: isRetroTheme ? 0 : 3,
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
                 height: '100%',
               }}
             >
-              <Typography variant="subtitle2" sx={{ color: themeName === 'dsp' ? '#39FF14' : '#f48fb1', letterSpacing: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'var(--primary)', letterSpacing: 1 }}>
                 TTS • {pipelineInsights?.tts?.model || 'Piper'}
               </Typography>
-              <Typography variant="caption" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'rgba(227,242,253,0.6)' }}>
+              <Typography variant="caption" sx={{ color: 'var(--muted-foreground)' }}>
                 Speed {pipelineInsights?.tts?.speed ?? 1.0} · Bytes {(pipelineInsights?.tts?.audio_bytes ?? 0).toLocaleString()}
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mt: 1.5, color: themeName === 'dsp' ? '#39FF14' : 'rgba(227, 242, 253, 0.8)' }}
+                sx={{ mt: 1.5, color: 'var(--foreground)' }}
               >
                 Voice synthesis ready. Characters rendered: {pipelineInsights?.tts?.character_count ?? 0}.
               </Typography>
@@ -1099,26 +804,18 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
 
       {(transcript || response) && (
         <Card
-          className="voice-agent-card"
+          className="echo-card voice-agent-card"
           sx={{
             mb: 3,
-            background: palette.cardBg,
-            backdropFilter: 'blur(28px)',
-            border: palette.cardBorder,
-            boxShadow:
-              themeName === 'dsp'
-                ? '0 0 25px rgba(57, 255, 20, 0.4)'
-                : themeName === 'synthwave'
-                ? '0 0 40px rgba(131, 56, 236, 0.4)'
-                : '0 25px 60px rgba(4, 5, 20, 0.8)',
+            background: 'var(--card)',
+            backdropFilter: isRetroTheme ? 'none' : 'blur(28px)',
+            border: '1px solid var(--border)',
+            borderRadius: isRetroTheme ? 0 : 3,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           }}
         >
-          <CardContent
-            sx={{
-              p: 3,
-            }}
-          >
-            <Typography variant="h6" gutterBottom sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: 'var(--foreground)' }}>
               Conversation
             </Typography>
 
@@ -1128,9 +825,9 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                 sx={{
                   mb: 3,
                   p: 2,
-                  borderRadius: 2,
-                  background: palette.summaryBg,
-                  border: palette.summaryBorder,
+                  borderRadius: isRetroTheme ? 0 : 2,
+                  background: 'var(--accent)',
+                  border: '1px solid var(--border)',
                   position: 'relative',
                   overflow: 'hidden',
                   '&::before': {
@@ -1140,34 +837,28 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                     left: 0,
                     right: 0,
                     height: '2px',
-                    background:
-                      themeName === 'dsp'
-                        ? '#39FF14'
-                        : themeName === 'synthwave'
-                        ? 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)'
-                        : 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
+                    background: 'var(--primary)',
                   },
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Summarize sx={{ mr: 1, fontSize: 20, color: themeName === 'dsp' ? '#39FF14' : '#90caf9' }} />
-                  <Typography variant="subtitle1" color="primary" sx={{ fontWeight: 600, color: themeName === 'dsp' ? '#39FF14' : 'primary' }}>
+                  <Summarize sx={{ mr: 1, fontSize: 20, color: 'var(--primary)' }} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'var(--primary)' }}>
                     ✨ Summary
                   </Typography>
                   {isSummarizing && (
                     <CircularProgress
                       size={18}
-                      sx={{ ml: 1, color: themeName === 'dsp' ? '#39FF14' : '#90caf9' }}
+                      sx={{ ml: 1, color: 'var(--primary)' }}
                     />
                   )}
                 </Box>
                 <Typography
                   variant="body1"
                   sx={{
-                    color: themeName === 'dsp' ? '#39FF14' : 'text.secondary',
+                    color: 'var(--muted-foreground)',
                     fontStyle: 'italic',
                     lineHeight: 1.6,
-                    opacity: 0.9,
                   }}
                 >
                   {summary}
@@ -1178,32 +869,32 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
             {/* Original Content Accordion */}
             <Accordion
               sx={{
-                background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(10px)',
-                border: themeName === 'dsp' ? '1px solid #39FF14' : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px !important',
+                background: 'var(--accent)',
+                backdropFilter: isRetroTheme ? 'none' : 'blur(10px)',
+                border: '1px solid var(--border)',
+                borderRadius: isRetroTheme ? '0 !important' : '12px !important',
                 '&:before': {
                   display: 'none',
                 },
                 '&.Mui-expanded': {
-                  background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.08)',
+                  background: 'var(--accent)',
                 },
               }}
             >
               <AccordionSummary
-                expandIcon={<ExpandMore sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />}
+                expandIcon={<ExpandMore sx={{ color: 'var(--foreground)' }} />}
                 aria-controls="conversation-content"
                 id="conversation-header"
               >
-                <Typography variant="subtitle1" sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }}>View Details</Typography>
+                <Typography variant="subtitle1" sx={{ color: 'var(--foreground)' }}>View Details</Typography>
                 <Chip
                   label={`${transcript ? 'Transcript' : ''}${transcript && response ? ' + ' : ''}${response ? 'Response' : ''}`}
                   size="small"
                   sx={{ 
                     ml: 1,
-                    backgroundColor: themeName === 'dsp' ? '#000000' : 'inherit',
-                    color: themeName === 'dsp' ? '#39FF14' : 'inherit',
-                    border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
+                    backgroundColor: 'var(--secondary)',
+                    color: 'var(--secondary-foreground)',
+                    border: '1px solid var(--border)',
                   }}
                 />
               </AccordionSummary>
@@ -1213,7 +904,7 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                     <Typography
                       variant="subtitle1"
                       sx={{
-                        color: themeName === 'dsp' ? '#39FF14' : '#4caf50',
+                        color: 'var(--primary)',
                         fontWeight: 600,
                         mb: 1,
                         display: 'flex',
@@ -1221,32 +912,32 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                       }}
                       gutterBottom
                     >
-                      <Mic sx={{ mr: 1, fontSize: 20, color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />
+                      <Mic sx={{ mr: 1, fontSize: 20, color: 'var(--primary)' }} />
                       You said:
                     </Typography>
                     <Typography
                       variant="body1"
                       sx={{
                         p: 2,
-                        background: palette.transcriptBg,
-                        border: palette.transcriptBorder,
-                        borderRadius: 2,
-                        borderLeft: `4px solid ${palette.transcriptAccent}`,
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: isRetroTheme ? 0 : 2,
+                        borderLeft: '4px solid var(--primary)',
                         lineHeight: 1.6,
-                        color: themeName === 'dsp' ? '#39FF14' : 'text.primary',
+                        color: 'var(--foreground)',
                       }}
                     >
-              {transcript}
-            </Typography>
+                      {transcript}
+                    </Typography>
                   </Box>
-      )}
+                )}
 
-      {response && (
+                {response && (
                   <Box>
                     <Typography
                       variant="subtitle1"
                       sx={{
-                        color: themeName === 'dsp' ? '#39FF14' : '#f48fb1',
+                        color: 'var(--primary)',
                         fontWeight: 600,
                         mb: 1,
                         display: 'flex',
@@ -1255,22 +946,22 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                       gutterBottom
                     >
                       🤖 Assistant Response:
-            </Typography>
+                    </Typography>
                     <Typography
                       variant="body1"
                       sx={{
                         p: 2,
-                        background: palette.responseBg,
-                        border: palette.responseBorder,
-                        borderRadius: 2,
-                        borderLeft: `4px solid ${palette.responseAccent}`,
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: isRetroTheme ? 0 : 2,
+                        borderLeft: '4px solid var(--primary)',
                         lineHeight: 1.6,
-                        color: themeName === 'dsp' ? '#39FF14' : 'text.primary',
+                        color: 'var(--foreground)',
                         mb: 2,
                       }}
                     >
-              {response}
-            </Typography>
+                      {response}
+                    </Typography>
                     <Box
                       sx={{
                         mt: 3,
@@ -1280,8 +971,8 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                         flexWrap: 'wrap',
                       }}
                     >
-              <Button
-                startIcon={<PlayArrow />}
+                      <Button
+                        startIcon={<PlayArrow />}
                         variant="contained"
                         disabled={!audioData}
                         onClick={() => {
@@ -1293,35 +984,32 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                           if (audioData && audioData.length > 0) {
                             const preview = response.substring(0, 100) + (response.length > 100 ? '...' : '');
                             console.log('About to play audio for text:', preview);
-
-                            // Don't show alert, just play directly
                             playAudioResponse(audioData, response);
                           } else {
                             console.error('No audio data available');
                             speakWithWebSpeech(response);
                           }
                         }}
+                        className="echo-button-primary"
                         sx={{
-                          background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #1e88e5 0%, #7CFC00 90%)',
-                          color: themeName === 'dsp' ? '#000000' : '#01010b',
+                          background: 'var(--primary)',
+                          color: 'var(--primary-foreground)',
                           fontWeight: 600,
-                          borderRadius: '20px',
+                          borderRadius: isRetroTheme ? 0 : '20px',
                           px: 3,
                           py: 1,
-                          boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.5)' : '0 10px 25px rgba(30, 136, 229, 0.35)',
+                          boxShadow: '0 0 15px color-mix(in oklch, var(--primary) 40%, transparent)',
+                          transition: 'all 0.3s ease',
                           '&:hover': {
-                            background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #7CFC00 0%, #8e24aa 100%)',
-                            boxShadow: themeName === 'dsp' ? '0 0 30px rgba(57, 255, 20, 0.8)' : '0 15px 30px rgba(124, 252, 0, 0.35)',
+                            background: 'var(--primary)',
+                            filter: 'brightness(1.1)',
+                            boxShadow: '0 0 25px color-mix(in oklch, var(--primary) 60%, transparent)',
                             transform: 'translateY(-2px)',
                           },
                           '&:disabled': {
-                            background: themeName === 'dsp' ? '#000000' : 'rgba(255, 255, 255, 0.08)',
-                            color: themeName === 'dsp' ? '#39FF14' : 'rgba(255, 255, 255, 0.35)',
-                            border: themeName === 'dsp' ? '1px solid #39FF14' : 'none',
+                            background: 'var(--muted)',
+                            color: 'var(--muted-foreground)',
                             boxShadow: 'none',
-                          },
-                          '&:active': {
-                            transform: 'translateY(0)',
                           },
                         }}
                       >
@@ -1331,7 +1019,6 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                         startIcon={<Mic />}
                         variant="contained"
                         onClick={() => {
-                          // Play back the original recording
                           if (lastAudioBlob) {
                             const url = URL.createObjectURL(lastAudioBlob);
                             const audio = new Audio(url);
@@ -1342,26 +1029,23 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
                           }
                         }}
                         sx={{
-                          background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #8e24aa 0%, #311b92 90%)',
-                          color: themeName === 'dsp' ? '#000000' : '#fff',
+                          background: 'var(--secondary)',
+                          color: 'var(--secondary-foreground)',
                           fontWeight: 600,
-                          borderRadius: '20px',
+                          borderRadius: isRetroTheme ? 0 : '20px',
                           px: 3,
                           py: 1,
-                          boxShadow: themeName === 'dsp' ? '0 0 20px rgba(57, 255, 20, 0.5)' : '0 12px 28px rgba(49, 27, 146, 0.5)',
+                          border: '1px solid var(--border)',
+                          transition: 'all 0.3s ease',
                           '&:hover': {
-                            background: themeName === 'dsp' ? '#39FF14' : 'linear-gradient(120deg, #1e88e5 0%, #8e24aa 80%)',
-                            boxShadow: themeName === 'dsp' ? '0 0 30px rgba(57, 255, 20, 0.8)' : '0 18px 36px rgba(142, 36, 170, 0.4)',
+                            background: 'var(--accent)',
                             transform: 'translateY(-2px)',
-                          },
-                          '&:active': {
-                            transform: 'translateY(0)',
                           },
                         }}
                       >
                         🎤 Play Recording
-              </Button>
-            </Box>
+                      </Button>
+                    </Box>
                   </Box>
                 )}
               </AccordionDetails>
@@ -1371,29 +1055,29 @@ const VoiceInterface = ({ themeName = 'neon', onThemeChange }) => {
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<History sx={{ color: themeName === 'dsp' ? '#39FF14' : 'inherit' }} />}
-            onClick={toggleHistory}
-            sx={{
-              borderRadius: '25px',
-              px: 3,
-              py: 1,
-              border: palette.historyBorder,
-              color: themeName === 'dsp' ? '#39FF14' : '#E3F2FD',
-              background: palette.historyBg,
-              backdropFilter: 'blur(14px)',
-              '&:hover': {
-                background: palette.historyHoverBg,
-                border: palette.historyHoverBorder,
-                transform: 'translateY(-2px)',
-                boxShadow: palette.historyHoverShadow,
-              },
-              transition: 'all 0.3s ease-in-out',
-            }}
-          >
-            Conversation History
-          </Button>
+        <Button
+          variant="outlined"
+          startIcon={<History sx={{ color: 'var(--foreground)' }} />}
+          onClick={toggleHistory}
+          sx={{
+            borderRadius: isRetroTheme ? 0 : '25px',
+            px: 3,
+            py: 1,
+            border: '1px solid var(--border)',
+            color: 'var(--foreground)',
+            background: 'var(--card)',
+            backdropFilter: isRetroTheme ? 'none' : 'blur(14px)',
+            transition: 'all 0.3s ease-in-out',
+            '&:hover': {
+              background: 'var(--accent)',
+              borderColor: 'var(--primary)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 20px color-mix(in oklch, var(--primary) 30%, transparent)',
+            },
+          }}
+        >
+          Conversation History
+        </Button>
       </Box>
 
       {showHistory && <ConversationHistory />}

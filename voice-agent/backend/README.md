@@ -1,6 +1,6 @@
-# Teaser Backend
+# Echo Backend
 
-Backend API for the Teaser application, built with FastAPI and managed with Poetry.
+Backend API for the Echo application, built with FastAPI and managed with Poetry.
 
 ## 🚀 Quick Start
 

@@ -6,14 +6,39 @@ class ApiService {
   }
 
   async processAudio(audioBlob) {
-    console.log('ApiService: Sending audio blob:', {
+    // Validate blob
+    if (!audioBlob || audioBlob.size === 0) {
+      console.error('ApiService: Empty audio blob received');
+      throw new Error('No audio data recorded');
+    }
+
+    console.log('ApiService: Preparing to send audio blob:', {
       size: audioBlob.size,
       type: audioBlob.type,
-      firstBytes: Array.from(new Uint8Array(await audioBlob.slice(0, 20).arrayBuffer()))
     });
 
+    // Get first bytes for debugging
+    try {
+      const firstBytes = await audioBlob.slice(0, 20).arrayBuffer();
+      console.log('ApiService: First bytes:', Array.from(new Uint8Array(firstBytes)));
+    } catch (e) {
+      console.warn('Could not read first bytes:', e);
+    }
+
+    // Determine file extension based on mime type
+    let filename = 'audio.webm';
+    if (audioBlob.type.includes('ogg')) {
+      filename = 'audio.ogg';
+    } else if (audioBlob.type.includes('mp4')) {
+      filename = 'audio.mp4';
+    } else if (audioBlob.type.includes('wav')) {
+      filename = 'audio.wav';
+    }
+
     const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.webm');
+    formData.append('file', audioBlob, filename);
+
+    console.log(`ApiService: Sending ${filename} (${audioBlob.size} bytes) to ${this.baseUrl}/api/voice/process`);
 
     try {
       const response = await axios.post(
@@ -23,7 +48,7 @@ class ApiService {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          timeout: 30000, // 30 seconds
+          timeout: 60000, // 60 seconds (increased for longer processing)
         }
       );
 
@@ -31,7 +56,12 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error('Error processing audio:', error);
-      throw new Error('Failed to process audio');
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        throw new Error(error.response.data?.detail || 'Failed to process audio');
+      }
+      throw new Error('Failed to process audio - check if backend is running');
     }
   }
 

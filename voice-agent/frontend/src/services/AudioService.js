@@ -9,6 +9,28 @@ class AudioService {
     this.onAudioRecorded = null;
     this.onAudioLevel = null;
     this.onAnalysis = null;
+    this.chunks = [];
+    this.stream = null;
+  }
+
+  // Get supported mime type for MediaRecorder
+  getSupportedMimeType() {
+    const mimeTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+      'audio/wav',
+      ''  // Empty string uses browser default
+    ];
+
+    for (const mimeType of mimeTypes) {
+      if (mimeType === '' || MediaRecorder.isTypeSupported(mimeType)) {
+        console.log(`Using mime type: ${mimeType || 'browser default'}`);
+        return mimeType;
+      }
+    }
+    return '';
   }
 
   async startRecording(onRecorded, onLevel, onAnalysis) {
@@ -16,35 +38,73 @@ class AudioService {
       this.onAudioRecorded = onRecorded;
       this.onAudioLevel = onLevel;
       this.onAnalysis = onAnalysis;
+      this.chunks = [];
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      console.log('Requesting microphone access...');
+      
+      this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: parseInt(process.env.REACT_APP_AUDIO_SAMPLE_RATE || '16000'),
-          channelCount: parseInt(process.env.REACT_APP_AUDIO_CHANNELS || '1'),
           echoCancellation: true,
           noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000,
+          channelCount: 1,
         }
       });
 
-      this.mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+      console.log('Microphone access granted, setting up MediaRecorder...');
+
+      // Get supported mime type
+      const mimeType = this.getSupportedMimeType();
+      const options = mimeType ? { mimeType } : {};
+
+      this.mediaRecorder = new MediaRecorder(this.stream, options);
+      
+      console.log('MediaRecorder created:', {
+        mimeType: this.mediaRecorder.mimeType,
+        state: this.mediaRecorder.state,
+        audioBitsPerSecond: this.mediaRecorder.audioBitsPerSecond
       });
 
-      const chunks = [];
-
       this.mediaRecorder.ondataavailable = (event) => {
+        console.log('Data available event:', {
+          size: event.data.size,
+          type: event.data.type
+        });
         if (event.data.size > 0) {
-          chunks.push(event.data);
+          this.chunks.push(event.data);
         }
       };
 
-      this.mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+      this.mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event.error);
+      };
+
+      this.mediaRecorder.onstop = async () => {
+        console.log('MediaRecorder stopped, processing chunks:', {
+          chunkCount: this.chunks.length,
+          totalSize: this.chunks.reduce((sum, chunk) => sum + chunk.size, 0)
+        });
+
+        if (this.chunks.length === 0) {
+          console.error('No audio chunks recorded!');
+          if (this.onAudioRecorded) {
+            this.onAudioRecorded(new Blob([], { type: 'audio/webm' }));
+          }
+          this.cleanup();
+          return;
+        }
+
+        // Create blob from recorded chunks
+        const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
+        const blob = new Blob(this.chunks, { type: mimeType });
+        
         console.log('Recording stopped, created blob:', {
           size: blob.size,
           type: blob.type,
-          chunks: chunks.length
+          chunks: this.chunks.length
         });
+
         if (this.onAudioRecorded) {
           this.onAudioRecorded(blob);
         }
@@ -53,16 +113,20 @@ class AudioService {
 
       // Set up audio analysis for visual feedback
       if (onLevel || onAnalysis) {
-        this.setupAudioAnalysis(stream);
+        this.setupAudioAnalysis(this.stream);
       }
 
-      console.log('Starting MediaRecorder...');
-      this.mediaRecorder.start();
+      console.log('Starting MediaRecorder with timeslice...');
+      // Use timeslice to get data periodically (every 250ms)
+      // This ensures we get data even for short recordings
+      this.mediaRecorder.start(250);
+      console.log('MediaRecorder started, state:', this.mediaRecorder.state);
 
       // Stop recording after max duration
       const maxDuration = parseInt(process.env.REACT_APP_MAX_AUDIO_DURATION || '30') * 1000;
-      setTimeout(() => {
+      this.recordingTimeout = setTimeout(() => {
         if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+          console.log('Max duration reached, stopping recording...');
           this.stopRecording();
         }
       }, maxDuration);
@@ -74,15 +138,36 @@ class AudioService {
   }
 
   async stopRecording() {
+    console.log('stopRecording called, current state:', this.mediaRecorder?.state);
+    
+    if (this.recordingTimeout) {
+      clearTimeout(this.recordingTimeout);
+      this.recordingTimeout = null;
+    }
+
     if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      // Request any remaining data before stopping
+      this.mediaRecorder.requestData();
+      
+      // Small delay to ensure data is collected
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       this.mediaRecorder.stop();
-      this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      console.log('MediaRecorder stop() called');
+    }
+
+    // Stop all tracks
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Track stopped:', track.kind);
+      });
     }
   }
 
   setupAudioAnalysis(stream) {
     try {
-      this.audioContext = new AudioContext();
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
       this.analyser = this.audioContext.createAnalyser();
       const source = this.audioContext.createMediaStreamSource(stream);
 
@@ -175,12 +260,14 @@ class AudioService {
   }
 
   cleanup() {
+    console.log('Cleaning up AudioService resources...');
+    
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
     }
 
-    if (this.audioContext) {
+    if (this.audioContext && this.audioContext.state !== 'closed') {
       this.audioContext.close();
       this.audioContext = null;
     }
@@ -190,6 +277,8 @@ class AudioService {
     this.timeDomainArray = null;
     this.mediaRecorder = null;
     this.onAnalysis = null;
+    this.chunks = [];
+    this.stream = null;
   }
 
   // Convert audio blob to WAV format if needed

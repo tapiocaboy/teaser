@@ -1,8 +1,8 @@
-# Teaser Architecture
+# Echo Architecture
 
 ## Overview
 
-Teaser is a fully local, privacy-focused voice assistant that processes speech-to-text, generates LLM responses, and synthesizes speech-to-text - all running locally on the user's machine without any cloud dependencies.
+Echo is a fully local, privacy-focused voice assistant that processes speech-to-text, generates LLM responses, and synthesizes speech-to-text - all running locally on the user's machine without any cloud dependencies.
 
 ## Locally Running LLMs and Models
 

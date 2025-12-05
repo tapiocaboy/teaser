@@ -1,6 +1,6 @@
-# Teaser Configuration
+# Echo Configuration
 app:
-  name: "Teaser"
+  name: "Echo"
   version: "1.0.0"
   debug: true
 

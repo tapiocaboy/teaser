@@ -1,5 +1,5 @@
 """
-Teaser Backend - Main FastAPI Application
+Echo Backend - Main FastAPI Application
 """
 from fastapi import FastAPI, WebSocket, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Teaser API",
+    title="Echo API",
     description="Privacy-focused voice assistant with local LLM processing",
     version="1.0.0"
 )
@@ -67,13 +67,13 @@ async def startup_event():
         logger.error(f"Failed to initialize database: {e}")
         raise
 
-    logger.info("Teaser backend started")
+    logger.info("Echo backend started")
     logger.info("All services initialized successfully")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup services on shutdown"""
-    logger.info("Shutting down Teaser backend...")
+    logger.info("Shutting down Echo backend...")
 
     try:
         # Clean up Whisper model resources
@@ -106,11 +106,11 @@ async def shutdown_event():
     except Exception as e:
         logger.error(f"Error during shutdown cleanup: {e}")
 
-    logger.info("Teaser backend shutdown complete")
+    logger.info("Echo backend shutdown complete")
 
 @app.get("/")
 async def root():
-    return {"message": "Teaser API", "status": "running"}
+    return {"message": "Echo API", "status": "running"}
 
 @app.get("/health")
 async def health_check():

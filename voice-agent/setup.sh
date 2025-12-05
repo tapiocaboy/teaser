@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Teaser Setup Script
-echo "🎯 Setting up Teaser Environment"
+# Echo Setup Script
+echo "🎯 Setting up Echo Environment"
 
 # Check for required tools
 echo "📋 Checking system requirements..."

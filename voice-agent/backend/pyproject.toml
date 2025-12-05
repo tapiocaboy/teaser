@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "voice-agent-backend"
 version = "0.1.0"
-description = "Teaser Backend API"
-authors = ["Teaser Team <team@teaser.com>"]
+description = "Echo Backend API"
+authors = ["Echo Team <team@echo.com>"]
 readme = "README.md"
 package-mode = false
 

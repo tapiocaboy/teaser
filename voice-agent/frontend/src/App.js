@@ -1,261 +1,322 @@
-import React, { useMemo, useState } from 'react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import React, { useMemo } from 'react';
+import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Container, Box } from '@mui/material';
 import VoiceInterface from './components/VoiceInterface';
 import ParticleBackground from './components/ParticleBackground';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import './themes.css';
 import './App.css';
 
-const THEME_CONFIGS = {
-  synthwave: {
-    palette: {
-      mode: 'dark',
-      primary: { main: '#ff006e', dark: '#d6005c', light: '#ff3385' },
-      secondary: { main: '#8338ec', dark: '#6a2cc4', light: '#9d5ff0' },
-      background: { default: '#0f0820', paper: 'rgba(15, 8, 32, 0.9)' },
-      text: { primary: '#ffbe0b', secondary: 'rgba(255, 190, 11, 0.7)' },
-    },
-    typography: {
-      fontFamily: '"Space Grotesk", "Orbitron", "Roboto", sans-serif',
-      h4: { fontWeight: 700, letterSpacing: '2px' },
-      button: { letterSpacing: '1.5px' },
-    },
-    components: {
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: 'linear-gradient(145deg, rgba(15,8,32,0.95), rgba(50,20,70,0.9))',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '20px',
-            border: '2px solid rgba(255, 0, 110, 0.3)',
-            boxShadow: '0 0 40px rgba(255, 0, 110, 0.2)',
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: '999px',
-            textTransform: 'uppercase',
-            fontWeight: 700,
-            letterSpacing: 2,
-            boxShadow: '0 0 25px rgba(255, 0, 110, 0.4)',
-            transition: 'all 0.3s ease-in-out',
-            '&:hover': {
-              boxShadow: '0 0 35px rgba(255, 0, 110, 0.6)',
-              transform: 'translateY(-2px)',
-            },
-          },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            backdropFilter: 'blur(20px)',
-            borderRadius: '20px',
-            border: '2px solid rgba(131, 56, 236, 0.3)',
-            boxShadow: '0 0 40px rgba(131, 56, 236, 0.25)',
-          },
-        },
-      },
-      MuiLinearProgress: {
-        styleOverrides: {
-          root: {
-            borderRadius: '999px',
-            backgroundColor: 'rgba(255, 0, 110, 0.2)',
-            border: '1px solid rgba(255, 0, 110, 0.3)',
-          },
-          bar: {
-            borderRadius: '999px',
-            background: 'linear-gradient(90deg, #ff006e, #8338ec, #3a86ff)',
-          },
-        },
-      },
-    },
+// Theme color configurations for MUI palette (MUI doesn't support CSS variables in palette)
+const THEME_COLORS = {
+  light: {
+    primary: '#3730a3',
+    secondary: '#6366f1',
+    background: '#fafafa',
+    paper: '#ffffff',
+    text: '#1f2937',
+    textSecondary: '#6b7280',
   },
-  neon: {
-    palette: {
-      mode: 'dark',
-      primary: { main: '#7CFC00', dark: '#62c400', light: '#a5ff4f' },
-      secondary: { main: '#8e24aa', dark: '#5c007a', light: '#c158dc' },
-      background: { default: '#01010b', paper: 'rgba(7, 15, 28, 0.85)' },
-      text: { primary: '#E3F2FD', secondary: 'rgba(227, 242, 253, 0.7)' },
-    },
-    typography: {
-      fontFamily: '"Space Grotesk", "Roboto", "Helvetica", "Arial", sans-serif',
-      h4: { fontWeight: 700, letterSpacing: '1px' },
-      button: { letterSpacing: '1px' },
-    },
-    components: {
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: 'none',
-            backdropFilter: 'blur(18px)',
-            borderRadius: '20px',
-            border: '1px solid rgba(124, 252, 0, 0.15)',
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: '999px',
-            textTransform: 'uppercase',
-            fontWeight: 600,
-            letterSpacing: 1,
-            boxShadow: '0 10px 35px rgba(0,0,0,0.35)',
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              boxShadow: '0 15px 45px rgba(0,0,0,0.45)',
-              transform: 'translateY(-2px)',
-            },
-          },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            backdropFilter: 'blur(18px)',
-            borderRadius: '20px',
-            border: '1px solid rgba(124, 252, 0, 0.12)',
-            boxShadow: '0 30px 60px rgba(0, 0, 0, 0.55)',
-          },
-        },
-      },
-      MuiLinearProgress: {
-        styleOverrides: {
-          root: {
-            borderRadius: '999px',
-            backgroundColor: 'rgba(13, 71, 161, 0.35)',
-          },
-          bar: {
-            borderRadius: '999px',
-            background: 'linear-gradient(90deg, #8e24aa, #1e88e5, #7CFC00)',
-          },
-        },
-      },
-    },
+  dark: {
+    primary: '#818cf8',
+    secondary: '#a78bfa',
+    background: '#111827',
+    paper: '#1f2937',
+    text: '#f3f4f6',
+    textSecondary: '#9ca3af',
   },
-  dsp: {
-    palette: {
-      mode: 'dark',
-      primary: { main: '#39FF14', dark: '#39FF14', light: '#39FF14' },
-      secondary: { main: '#39FF14', dark: '#39FF14', light: '#39FF14' },
-      background: {
-        default: '#000000',
-        paper: '#000000',
-      },
-      text: {
-        primary: '#39FF14',
-        secondary: '#39FF14',
-      },
-    },
-    typography: {
-      fontFamily: '"IBM Plex Mono", "Space Grotesk", "Roboto", sans-serif',
-      h4: { fontWeight: 600, letterSpacing: '0.08em' },
-      button: { letterSpacing: '0.08em' },
-    },
-    components: {
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            backgroundImage: 'none',
-            backgroundColor: '#000000',
-            borderRadius: '18px',
-            border: '1px solid #39FF14',
-            boxShadow: '0 0 20px rgba(57, 255, 20, 0.3)',
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: '18px',
-            textTransform: 'uppercase',
-            fontWeight: 600,
-            letterSpacing: '0.1em',
-            backgroundImage: 'none',
-            backgroundColor: '#39FF14',
-            color: '#000000',
-            boxShadow: '0 0 15px rgba(57, 255, 20, 0.5)',
-            '&:hover': {
-              backgroundColor: '#39FF14',
-              boxShadow: '0 0 25px rgba(57, 255, 20, 0.8)',
-            },
-          },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: '18px',
-            border: '1px solid #39FF14',
-            boxShadow: '0 0 20px rgba(57, 255, 20, 0.3)',
-            backgroundColor: '#000000',
-          },
-        },
-      },
-      MuiLinearProgress: {
-        styleOverrides: {
-          root: {
-            borderRadius: '999px',
-            backgroundColor: '#000000',
-            border: '1px solid #39FF14',
-          },
-          bar: {
-            borderRadius: '999px',
-            background: '#39FF14',
-          },
-        },
-      },
-    },
+  'ai-cyber': {
+    primary: '#22d3ee',
+    secondary: '#ec4899',
+    background: '#0a1628',
+    paper: '#0f2340',
+    text: '#e0f2fe',
+    textSecondary: '#7dd3fc',
+  },
+  'ai-neon': {
+    primary: '#a855f7',
+    secondary: '#84cc16',
+    background: '#1a0a2e',
+    paper: '#2d1b4e',
+    text: '#fef3c7',
+    textSecondary: '#d8b4fe',
+  },
+  'ai-matrix': {
+    primary: '#22c55e',
+    secondary: '#16a34a',
+    background: '#030a05',
+    paper: '#0a1f10',
+    text: '#86efac',
+    textSecondary: '#4ade80',
+  },
+  'ai-gradient': {
+    primary: '#f472b6',
+    secondary: '#8b5cf6',
+    background: '#2e1065',
+    paper: '#3b0f7a',
+    text: '#fce7f3',
+    textSecondary: '#f9a8d4',
+  },
+  darkrise: {
+    primary: '#3b82f6',
+    secondary: '#60a5fa',
+    background: '#0f172a',
+    paper: '#1e293b',
+    text: '#f1f5f9',
+    textSecondary: '#94a3b8',
+  },
+  'darkrise-purple': {
+    primary: '#a78bfa',
+    secondary: '#7c3aed',
+    background: '#1e1b4b',
+    paper: '#312e81',
+    text: '#f5f3ff',
+    textSecondary: '#c4b5fd',
+  },
+  'darkrise-ocean': {
+    primary: '#06b6d4',
+    secondary: '#0891b2',
+    background: '#0c4a6e',
+    paper: '#155e75',
+    text: '#ecfeff',
+    textSecondary: '#67e8f9',
+  },
+  'enterprise-elite': {
+    primary: '#60a5fa',
+    secondary: '#8b5cf6',
+    background: '#0f172a',
+    paper: '#1e293b',
+    text: '#f8fafc',
+    textSecondary: '#94a3b8',
+  },
+  'enterprise-slate': {
+    primary: '#06b6d4',
+    secondary: '#3b82f6',
+    background: '#0f172a',
+    paper: '#1e293b',
+    text: '#f8fafc',
+    textSecondary: '#94a3b8',
+  },
+  'quantum-pro': {
+    primary: '#22d3ee',
+    secondary: '#0ea5e9',
+    background: '#030712',
+    paper: '#111827',
+    text: '#f9fafb',
+    textSecondary: '#9ca3af',
+  },
+  'retro-90s': {
+    primary: '#0000EE',
+    secondary: '#551A8B',
+    background: '#C0C0C0',
+    paper: '#D4D0C8',
+    text: '#000000',
+    textSecondary: '#404040',
   },
 };
 
-function App() {
-  // Load theme from localStorage or default to 'neon'
-  const [themeName, setThemeName] = useState(() => {
-    const savedTheme = localStorage.getItem('voiceAgentTheme');
-    return savedTheme && THEME_CONFIGS[savedTheme] ? savedTheme : 'neon';
-  });
+// MUI theme that uses actual color values (not CSS variables)
+function createAdaptiveTheme(themeId) {
+  const isDark = themeId !== 'light' && themeId !== 'retro-90s';
+  const colors = THEME_COLORS[themeId] || THEME_COLORS.dark;
   
-  const theme = useMemo(
-    () => createTheme(THEME_CONFIGS[themeName] || THEME_CONFIGS.neon),
-    [themeName]
+  return createTheme({
+    palette: {
+      mode: isDark ? 'dark' : 'light',
+      primary: {
+        main: colors.primary,
+      },
+      secondary: {
+        main: colors.secondary,
+      },
+      background: {
+        default: colors.background,
+        paper: colors.paper,
+      },
+      text: {
+        primary: colors.text,
+        secondary: colors.textSecondary,
+      },
+    },
+    typography: {
+      fontFamily: themeId === 'retro-90s' 
+        ? '"Courier New", Courier, monospace'
+        : '"Space Grotesk", "Roboto", "Helvetica", "Arial", sans-serif',
+      h4: { 
+        fontWeight: 700, 
+        letterSpacing: themeId === 'retro-90s' ? '0' : '1px' 
+      },
+      button: { 
+        letterSpacing: themeId === 'retro-90s' ? '0.5px' : '1px' 
+      },
+    },
+    shape: {
+      borderRadius: themeId === 'retro-90s' ? 0 : 16,
+    },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            backgroundColor: 'transparent',
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none',
+            backgroundColor: 'var(--card)',
+            color: 'var(--card-foreground)',
+            backdropFilter: themeId === 'retro-90s' ? 'none' : 'blur(20px)',
+            border: '1px solid var(--border)',
+            transition: 'all 0.3s ease',
+          },
+        },
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: themeId === 'retro-90s' ? 0 : 999,
+            textTransform: themeId === 'retro-90s' ? 'uppercase' : 'none',
+            fontWeight: 600,
+            letterSpacing: themeId === 'retro-90s' ? '0.5px' : '1px',
+            transition: 'all 0.3s ease',
+          },
+          contained: {
+            backgroundColor: 'var(--primary)',
+            color: 'var(--primary-foreground)',
+            '&:hover': {
+              backgroundColor: 'var(--primary)',
+              filter: 'brightness(1.1)',
+            },
+          },
+          outlined: {
+            borderColor: 'var(--border)',
+            color: 'var(--foreground)',
+            '&:hover': {
+              borderColor: 'var(--primary)',
+              backgroundColor: 'var(--accent)',
+            },
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            backgroundColor: 'var(--card)',
+            color: 'var(--card-foreground)',
+            backdropFilter: themeId === 'retro-90s' ? 'none' : 'blur(20px)',
+            border: '1px solid var(--border)',
+            boxShadow: themeId === 'retro-90s' 
+              ? 'inset 1px 1px 0 #DFDFDF, inset -1px -1px 0 #404040'
+              : '0 8px 32px rgba(0, 0, 0, 0.2)',
+          },
+        },
+      },
+      MuiLinearProgress: {
+        styleOverrides: {
+          root: {
+            borderRadius: themeId === 'retro-90s' ? 0 : 999,
+            backgroundColor: 'var(--muted)',
+            border: '1px solid var(--border)',
+          },
+          bar: {
+            borderRadius: themeId === 'retro-90s' ? 0 : 999,
+            backgroundColor: 'var(--primary)',
+          },
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            color: 'var(--foreground)',
+            '&:hover': {
+              backgroundColor: 'var(--accent)',
+            },
+          },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            backgroundColor: 'var(--popover)',
+            color: 'var(--popover-foreground)',
+            border: '1px solid var(--border)',
+            borderRadius: themeId === 'retro-90s' ? 0 : 8,
+          },
+        },
+      },
+      MuiMenu: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: 'var(--popover)',
+            color: 'var(--popover-foreground)',
+            border: '1px solid var(--border)',
+          },
+        },
+      },
+      MuiMenuItem: {
+        styleOverrides: {
+          root: {
+            '&:hover': {
+              backgroundColor: 'var(--accent)',
+            },
+            '&.Mui-selected': {
+              backgroundColor: 'var(--primary)',
+              color: 'var(--primary-foreground)',
+            },
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          root: {
+            color: 'inherit',
+          },
+        },
+      },
+    },
+  });
+}
+
+// Determine if particles should be shown based on theme
+function shouldShowParticles(themeId) {
+  // Show particles for all themes except retro-90s and enterprise-slate
+  return !['retro-90s', 'enterprise-slate', 'light'].includes(themeId);
+}
+
+// Get particle theme name for compatibility with existing ParticleBackground
+function getParticleThemeName(themeId) {
+  const particleThemeMap = {
+    'ai-cyber': 'synthwave',
+    'ai-neon': 'neon',
+    'ai-matrix': 'dsp',
+    'ai-gradient': 'synthwave',
+    'darkrise': 'neon',
+    'darkrise-purple': 'synthwave',
+    'darkrise-ocean': 'neon',
+    'enterprise-elite': 'neon',
+    'quantum-pro': 'neon',
+    'dark': 'neon',
+  };
+  return particleThemeMap[themeId] || 'neon';
+}
+
+function AppContent() {
+  const { theme } = useTheme();
+  
+  const muiTheme = useMemo(
+    () => createAdaptiveTheme(theme),
+    [theme]
   );
 
-  // Save theme to localStorage when it changes
-  const handleThemeChange = React.useCallback((newTheme) => {
-    setThemeName(newTheme);
-    localStorage.setItem('voiceAgentTheme', newTheme);
-  }, []);
-
-  // Apply body background color based on theme
-  React.useEffect(() => {
-    if (themeName === 'dsp') {
-      document.body.style.backgroundColor = '#000000';
-      document.body.style.backgroundImage = 'none';
-    } else if (themeName === 'synthwave') {
-      document.body.style.backgroundColor = '#0f0820';
-      document.body.style.backgroundImage = `
-        radial-gradient(circle at 15% 15%, rgba(255, 0, 110, 0.15), transparent 40%),
-        radial-gradient(circle at 85% 20%, rgba(131, 56, 236, 0.18), transparent 35%),
-        radial-gradient(circle at 50% 85%, rgba(58, 134, 255, 0.12), transparent 40%)
-      `;
-    } else {
-      document.body.style.backgroundColor = '#01010b';
-      document.body.style.backgroundImage = `
-        radial-gradient(circle at 20% 20%, rgba(124, 252, 0, 0.12), transparent 45%),
-        radial-gradient(circle at 80% 0%, rgba(30, 136, 229, 0.18), transparent 30%),
-        radial-gradient(circle at 50% 80%, rgba(142, 36, 170, 0.15), transparent 35%)
-      `;
-    }
-  }, [themeName]);
+  const showParticles = shouldShowParticles(theme);
+  const particleTheme = getParticleThemeName(theme);
 
   return (
-    <ThemeProvider theme={theme}>
+    <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
-      {themeName !== 'dsp' && <ParticleBackground themeName={themeName} />}
+      {showParticles && <ParticleBackground themeName={particleTheme} />}
       <Container maxWidth="lg">
         <Box
           sx={{
@@ -267,9 +328,17 @@ function App() {
             zIndex: 1,
           }}
         >
-          <VoiceInterface themeName={themeName} onThemeChange={handleThemeChange} />
+          <VoiceInterface />
         </Box>
       </Container>
+    </MuiThemeProvider>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider defaultTheme="dark">
+      <AppContent />
     </ThemeProvider>
   );
 }

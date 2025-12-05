@@ -139,7 +139,7 @@ const VoiceInterface: React.FC = () => {
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto' }}>
       <Typography variant="h4" component="h1" gutterBottom align="center">
-        Teaser
+        Echo
       </Typography>
 
       <Paper elevation={3} sx={{ p: 3, mb: 2 }}>
