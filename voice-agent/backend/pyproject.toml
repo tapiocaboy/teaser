@@ -22,6 +22,10 @@ scipy = "*"
 python-multipart = "*"
 pydantic = "*"
 python-dotenv = "*"
+pyyaml = "*"
+# AWS SDK - used when IS_AWS=true
+boto3 = "^1.34.0"
+botocore = "^1.34.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -29,10 +33,6 @@ pytest = "*"
 pytest-asyncio = "*"
 black = "^23.11.0"
 isort = "^5.12.0"
-
-[tool.poetry.scripts]
-start = "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
-serve = "uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

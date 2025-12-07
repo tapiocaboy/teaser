@@ -1,7 +1,9 @@
 # Echo Configuration
+# Set IS_AWS=true environment variable to use AWS services instead of local
+
 app:
   name: "Echo"
-  version: "1.0.0"
+  version: "1.1.0"
   debug: true
 
 server:
@@ -9,6 +11,16 @@ server:
   port: 8000
   reload: true
 
+# ============================================
+# Service Mode Selection
+# ============================================
+# IS_AWS environment variable controls which services are used:
+# - IS_AWS=false (default): Local services (Whisper, Ollama, Piper, SQLite)
+# - IS_AWS=true: AWS services (Transcribe, Bedrock, Polly, DynamoDB/S3)
+
+# ============================================
+# Local Service Configuration (IS_AWS=false)
+# ============================================
 models:
   stt:
     model_size: "base"  # Options: tiny, base, small, medium, large
@@ -33,6 +45,68 @@ database:
   url: "sqlite:///data/conversations.db"
   echo: false  # Set to true for SQL logging
 
+# ============================================
+# AWS Service Configuration (IS_AWS=true)
+# ============================================
+# These settings are used when IS_AWS=true
+# Most can be overridden via environment variables
+
+aws:
+  # General AWS settings
+  region: "ap-southeast-2"  # Or set AWS_REGION env var
+
+  # AWS Transcribe (Speech-to-Text)
+  transcribe:
+    language_code: "en-US"  # Or set TRANSCRIBE_LANGUAGE_CODE
+    media_encoding: "pcm"
+    sample_rate: 16000
+    enable_speaker_diarization: false
+    vocabulary_name: null  # Optional custom vocabulary
+
+  # AWS Bedrock (LLM)
+  bedrock:
+    # Model options:
+    # - arn:aws:bedrock:ap-southeast-2:058264223017:inference-profile/au.anthropic.claude-haiku-4-5-20251001-v1:0 (recommended)
+    # - anthropic.claude-3-sonnet-20240229-v1:0
+    # - anthropic.claude-3-haiku-20240307-v1:0 (faster/cheaper)
+    # - amazon.titan-text-express-v1 (cost-effective)
+    model_id: "arn:aws:bedrock:ap-southeast-2:058264223017:inference-profile/au.anthropic.claude-haiku-4-5-20251001-v1:0"  # Or set BEDROCK_MODEL_ID
+    max_tokens: 1024  # Or set BEDROCK_MAX_TOKENS
+    temperature: 0.7  # Or set BEDROCK_TEMPERATURE
+    
+    # System prompt for Echo personality
+    system_prompt: |
+      You are Echo, a helpful and friendly voice assistant. 
+      You provide clear, concise responses suitable for voice conversation.
+      Keep responses brief but informative - typically 1-3 sentences unless more detail is requested.
+      Be conversational and natural in your responses.
+
+  # AWS Polly (Text-to-Speech)
+  polly:
+    # Voice options by language:
+    # en-US: Joanna (F), Matthew (M), Ivy (F-child), etc.
+    # en-GB: Amy (F), Emma (F), Brian (M), Arthur (M)
+    # en-AU: Olivia (F)
+    # See full list: https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
+    voice_id: "Joanna"  # Or set POLLY_VOICE_ID
+    engine: "neural"  # Options: neural, standard - set POLLY_ENGINE
+    output_format: "mp3"  # Options: mp3, ogg_vorbis, pcm - set POLLY_OUTPUT_FORMAT
+    sample_rate: "24000"  # Or set POLLY_SAMPLE_RATE
+
+  # AWS DynamoDB (Conversation Storage)
+  dynamodb:
+    conversations_table: "echo-conversations"  # Or set DYNAMODB_TABLE_CONVERSATIONS
+    sessions_table: "echo-sessions"  # Or set DYNAMODB_TABLE_SESSIONS
+    ttl_days: 90  # Auto-delete old conversations (0 to disable)
+
+  # AWS S3 (Audio Storage)
+  s3:
+    bucket: "echo-audio-storage"  # Or set S3_BUCKET_AUDIO
+    enable_audio_storage: true  # Whether to store audio files
+
+# ============================================
+# Common Configuration
+# ============================================
 websocket:
   max_connections: 10
   heartbeat_interval: 30  # seconds

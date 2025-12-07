@@ -20,11 +20,12 @@ resource "aws_sns_topic_subscription" "alarm_email" {
 }
 
 # =============================================================================
-# Lambda Alarms
+# Lambda Alarms (only created when Lambda functions are deployed)
 # =============================================================================
 
 # Voice Processor Error Alarm
 resource "aws_cloudwatch_metric_alarm" "voice_processor_errors" {
+  count               = local.lambda_voice_processor_exists ? 1 : 0
   alarm_name          = "${local.name_prefix}-voice-processor-errors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
@@ -38,7 +39,7 @@ resource "aws_cloudwatch_metric_alarm" "voice_processor_errors" {
   ok_actions          = [aws_sns_topic.alarms.arn]
 
   dimensions = {
-    FunctionName = aws_lambda_function.voice_processor.function_name
+    FunctionName = aws_lambda_function.voice_processor[0].function_name
   }
 
   tags = {
@@ -48,6 +49,7 @@ resource "aws_cloudwatch_metric_alarm" "voice_processor_errors" {
 
 # Voice Processor Duration Alarm
 resource "aws_cloudwatch_metric_alarm" "voice_processor_duration" {
+  count               = local.lambda_voice_processor_exists ? 1 : 0
   alarm_name          = "${local.name_prefix}-voice-processor-duration"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
@@ -60,7 +62,7 @@ resource "aws_cloudwatch_metric_alarm" "voice_processor_duration" {
   alarm_actions       = [aws_sns_topic.alarms.arn]
 
   dimensions = {
-    FunctionName = aws_lambda_function.voice_processor.function_name
+    FunctionName = aws_lambda_function.voice_processor[0].function_name
   }
 
   tags = {
@@ -153,148 +155,97 @@ resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${local.name_prefix}-dashboard"
 
   dashboard_body = jsonencode({
-    widgets = [
+    widgets = concat(
       # Title
-      {
-        type   = "text"
-        x      = 0
-        y      = 0
-        width  = 24
-        height = 1
-        properties = {
-          markdown = "# Echo Voice Agent Dashboard - ${upper(var.environment)}"
+      [
+        {
+          type   = "text"
+          x      = 0
+          y      = 0
+          width  = 24
+          height = 1
+          properties = {
+            markdown = "# Echo Voice Agent Dashboard - ${upper(var.environment)}"
+          }
         }
-      },
-      # Lambda Invocations
-      {
-        type   = "metric"
-        x      = 0
-        y      = 1
-        width  = 8
-        height = 6
-        properties = {
-          title  = "Lambda Invocations"
-          region = var.aws_region
-          metrics = [
-            ["AWS/Lambda", "Invocations", "FunctionName", aws_lambda_function.voice_processor.function_name, { label = "Voice Processor" }],
-            [".", ".", ".", aws_lambda_function.stt_processor.function_name, { label = "STT" }],
-            [".", ".", ".", aws_lambda_function.llm_processor.function_name, { label = "LLM" }],
-            [".", ".", ".", aws_lambda_function.tts_processor.function_name, { label = "TTS" }]
-          ]
-          stat   = "Sum"
-          period = 300
-        }
-      },
-      # Lambda Errors
-      {
-        type   = "metric"
-        x      = 8
-        y      = 1
-        width  = 8
-        height = 6
-        properties = {
-          title  = "Lambda Errors"
-          region = var.aws_region
-          metrics = [
-            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.voice_processor.function_name, { label = "Voice Processor" }],
-            [".", ".", ".", aws_lambda_function.stt_processor.function_name, { label = "STT" }],
-            [".", ".", ".", aws_lambda_function.llm_processor.function_name, { label = "LLM" }],
-            [".", ".", ".", aws_lambda_function.tts_processor.function_name, { label = "TTS" }]
-          ]
-          stat   = "Sum"
-          period = 300
-        }
-      },
-      # Lambda Duration
-      {
-        type   = "metric"
-        x      = 16
-        y      = 1
-        width  = 8
-        height = 6
-        properties = {
-          title  = "Lambda Duration (ms)"
-          region = var.aws_region
-          metrics = [
-            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.voice_processor.function_name, { label = "Voice Processor" }],
-            [".", ".", ".", aws_lambda_function.stt_processor.function_name, { label = "STT" }],
-            [".", ".", ".", aws_lambda_function.llm_processor.function_name, { label = "LLM" }],
-            [".", ".", ".", aws_lambda_function.tts_processor.function_name, { label = "TTS" }]
-          ]
-          stat   = "Average"
-          period = 300
-        }
-      },
+      ],
       # API Gateway Requests
-      {
-        type   = "metric"
-        x      = 0
-        y      = 7
-        width  = 12
-        height = 6
-        properties = {
-          title  = "API Gateway Requests"
-          region = var.aws_region
-          metrics = [
-            ["AWS/ApiGateway", "Count", "ApiId", aws_apigatewayv2_api.main.id, "Stage", var.environment]
-          ]
-          stat   = "Sum"
-          period = 300
+      [
+        {
+          type   = "metric"
+          x      = 0
+          y      = 1
+          width  = 12
+          height = 6
+          properties = {
+            title  = "API Gateway Requests"
+            region = var.aws_region
+            metrics = [
+              ["AWS/ApiGateway", "Count", "ApiId", aws_apigatewayv2_api.main.id, "Stage", var.environment]
+            ]
+            stat   = "Sum"
+            period = 300
+          }
         }
-      },
+      ],
       # API Gateway Latency
-      {
-        type   = "metric"
-        x      = 12
-        y      = 7
-        width  = 12
-        height = 6
-        properties = {
-          title  = "API Gateway Latency"
-          region = var.aws_region
-          metrics = [
-            ["AWS/ApiGateway", "Latency", "ApiId", aws_apigatewayv2_api.main.id, "Stage", var.environment, { stat = "Average", label = "Average" }],
-            [".", ".", ".", ".", ".", ".", { stat = "p99", label = "p99" }]
-          ]
-          period = 300
+      [
+        {
+          type   = "metric"
+          x      = 12
+          y      = 1
+          width  = 12
+          height = 6
+          properties = {
+            title  = "API Gateway Latency"
+            region = var.aws_region
+            metrics = [
+              ["AWS/ApiGateway", "Latency", "ApiId", aws_apigatewayv2_api.main.id, "Stage", var.environment, { stat = "Average", label = "Average" }],
+              [".", ".", ".", ".", ".", ".", { stat = "p99", label = "p99" }]
+            ]
+            period = 300
+          }
         }
-      },
+      ],
       # DynamoDB Read/Write Capacity
-      {
-        type   = "metric"
-        x      = 0
-        y      = 13
-        width  = 12
-        height = 6
-        properties = {
-          title  = "DynamoDB Consumed Capacity"
-          region = var.aws_region
-          metrics = [
-            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", aws_dynamodb_table.conversations.name, { label = "Read" }],
-            [".", "ConsumedWriteCapacityUnits", ".", ".", { label = "Write" }]
-          ]
-          stat   = "Sum"
-          period = 300
+      [
+        {
+          type   = "metric"
+          x      = 0
+          y      = 7
+          width  = 12
+          height = 6
+          properties = {
+            title  = "DynamoDB Consumed Capacity"
+            region = var.aws_region
+            metrics = [
+              ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", aws_dynamodb_table.conversations.name, { label = "Read" }],
+              [".", "ConsumedWriteCapacityUnits", ".", ".", { label = "Write" }]
+            ]
+            stat   = "Sum"
+            period = 300
+          }
         }
-      },
+      ],
       # S3 Bucket Size
-      {
-        type   = "metric"
-        x      = 12
-        y      = 13
-        width  = 12
-        height = 6
-        properties = {
-          title  = "S3 Audio Bucket Size"
-          region = var.aws_region
-          metrics = [
-            ["AWS/S3", "BucketSizeBytes", "BucketName", aws_s3_bucket.audio_storage.id, "StorageType", "StandardStorage"]
-          ]
-          stat   = "Average"
-          period = 86400
+      [
+        {
+          type   = "metric"
+          x      = 12
+          y      = 7
+          width  = 12
+          height = 6
+          properties = {
+            title  = "S3 Audio Bucket Size"
+            region = var.aws_region
+            metrics = [
+              ["AWS/S3", "BucketSizeBytes", "BucketName", aws_s3_bucket.audio_storage.id, "StorageType", "StandardStorage"]
+            ]
+            stat   = "Average"
+            period = 86400
+          }
         }
-      }
-    ]
+      ]
+    )
   })
 }
-

@@ -5,7 +5,7 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-southeast-2"
 }
 
 variable "environment" {
@@ -78,9 +78,9 @@ variable "lambda_runtime" {
 
 # Bedrock Configuration
 variable "bedrock_model_id" {
-  description = "AWS Bedrock model ID"
+  description = "AWS Bedrock model ID or inference profile ARN"
   type        = string
-  default     = "anthropic.claude-3-sonnet-20240229-v1:0"
+  default     = "arn:aws:bedrock:ap-southeast-2:058264223017:inference-profile/au.anthropic.claude-haiku-4-5-20251001-v1:0"
 }
 
 # Polly Configuration

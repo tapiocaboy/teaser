@@ -73,7 +73,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "audio_storage" {
     }
 
     transition {
-      days          = 7
+      days          = 30  # STANDARD_IA requires minimum 30 days
       storage_class = "STANDARD_IA"
     }
   }

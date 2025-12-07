@@ -61,15 +61,15 @@ output "dynamodb_summaries_table" {
   value       = aws_dynamodb_table.summaries.name
 }
 
-# Lambda Functions
+# Lambda Functions (only output when deployed)
 output "lambda_voice_processor_arn" {
   description = "Voice processor Lambda ARN"
-  value       = aws_lambda_function.voice_processor.arn
+  value       = local.lambda_voice_processor_exists ? aws_lambda_function.voice_processor[0].arn : "Not deployed - add Lambda ZIP files"
 }
 
 output "lambda_voice_processor_name" {
   description = "Voice processor Lambda function name"
-  value       = aws_lambda_function.voice_processor.function_name
+  value       = local.lambda_voice_processor_exists ? aws_lambda_function.voice_processor[0].function_name : "Not deployed"
 }
 
 # IAM

@@ -135,6 +135,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 }
 
 # CloudFront Cache Policy for API (optional, for more control)
+# Note: When caching is disabled, header_behavior must be "none"
 resource "aws_cloudfront_cache_policy" "api_no_cache" {
   name        = "${local.name_prefix}-api-no-cache"
   comment     = "No caching for API requests"
@@ -144,16 +145,13 @@ resource "aws_cloudfront_cache_policy" "api_no_cache" {
 
   parameters_in_cache_key_and_forwarded_to_origin {
     cookies_config {
-      cookie_behavior = "all"
+      cookie_behavior = "none"
     }
     headers_config {
-      header_behavior = "whitelist"
-      headers {
-        items = ["Authorization", "Content-Type", "X-Session-Id"]
-      }
+      header_behavior = "none"
     }
     query_strings_config {
-      query_string_behavior = "all"
+      query_string_behavior = "none"
     }
   }
 }
