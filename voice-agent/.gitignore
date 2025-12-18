@@ -21,6 +21,9 @@ Thumbs.db
 logs/
 *.log
 
+# PID files
+.pids/
+
 # Temporary files
 tmp/
 temp/
