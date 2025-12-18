@@ -1,5 +1,6 @@
 """
-Echo Backend - Main FastAPI Application
+Construction Site Voice Agent - Main FastAPI Application
+Supports daily updates from site workers and Q&A for site managers
 """
 from fastapi import FastAPI, WebSocket, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,8 +8,6 @@ from fastapi.responses import StreamingResponse
 import uvicorn
 import asyncio
 import logging
-import signal
-import sys
 from typing import Optional
 import json
 import os
@@ -19,6 +18,11 @@ from .llm.ollama_service import OllamaLLM
 from .tts.piper_service import PiperTTS
 from .database.models import init_database, Conversation, save_conversation, get_recent_conversations
 from .websocket.manager import WebSocketManager
+
+# Import routers
+from .routers.worker import router as worker_router, init_worker_services
+from .routers.manager import router as manager_router, init_manager_services
+
 import yaml
 
 # Load configuration
@@ -31,15 +35,17 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Echo API",
-    description="Privacy-focused voice assistant with local LLM processing",
-    version="1.0.0"
+    title="Construction Site Voice Agent API",
+    description="Voice-based daily reporting system for construction sites. Workers submit updates, managers review and query.",
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -57,6 +63,10 @@ logger.info("Piper TTS service initialized")
 
 ws_manager = WebSocketManager()
 
+# Include routers
+app.include_router(worker_router)
+app.include_router(manager_router)
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize services"""
@@ -67,13 +77,18 @@ async def startup_event():
         logger.error(f"Failed to initialize database: {e}")
         raise
 
-    logger.info("Echo backend started")
+    # Initialize router services
+    init_worker_services(stt_service, tts_service, llm_service)
+    init_manager_services(stt_service, tts_service, llm_service)
+
+    logger.info("Construction Site Voice Agent started")
     logger.info("All services initialized successfully")
+    logger.info("API Documentation available at /docs")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup services on shutdown"""
-    logger.info("Shutting down Echo backend...")
+    logger.info("Shutting down Voice Agent backend...")
 
     try:
         # Clean up Whisper model resources
@@ -106,11 +121,25 @@ async def shutdown_event():
     except Exception as e:
         logger.error(f"Error during shutdown cleanup: {e}")
 
-    logger.info("Echo backend shutdown complete")
+    logger.info("Voice Agent backend shutdown complete")
+
+# ============================================
+# ROOT ENDPOINTS
+# ============================================
 
 @app.get("/")
 async def root():
-    return {"message": "Echo API", "status": "running"}
+    return {
+        "message": "Construction Site Voice Agent API",
+        "version": "2.0.0",
+        "status": "running",
+        "features": {
+            "worker_updates": "/api/worker - Submit and view daily updates",
+            "manager_queries": "/api/manager - Review updates and ask questions",
+            "legacy_echo": "/api/voice - Original Echo voice assistant"
+        },
+        "documentation": "/docs"
+    }
 
 @app.get("/health")
 async def health_check():
@@ -121,13 +150,21 @@ async def health_check():
             "stt": "ready",
             "llm": "ready",
             "tts": "ready"
+        },
+        "features": {
+            "worker_updates": "active",
+            "manager_queries": "active"
         }
     }
+
+# ============================================
+# LEGACY ECHO ENDPOINTS (preserved for compatibility)
+# ============================================
 
 @app.post("/api/voice/process")
 async def process_voice_audio(file: UploadFile = File(...)):
     """
-    Process uploaded voice audio file
+    Process uploaded voice audio file (Legacy Echo endpoint)
     Returns transcribed text and LLM response
     """
     try:
@@ -200,13 +237,46 @@ async def process_voice_audio(file: UploadFile = File(...)):
 
 @app.get("/api/conversations")
 async def get_conversations(limit: int = 10, offset: int = 0):
-    """Get conversation history"""
+    """Get conversation history (Legacy Echo endpoint)"""
     try:
         conversations = get_recent_conversations(limit=limit, offset=offset)
         return {"conversations": [conv.to_dict() for conv in conversations]}
     except Exception as e:
         logger.error(f"Error retrieving conversations: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve conversation history")
+
+# ============================================
+# CONVENIENCE ENDPOINTS
+# ============================================
+
+@app.get("/api/sites")
+async def list_sites():
+    """List all construction sites"""
+    from .database.models import get_unique_sites
+    sites = get_unique_sites()
+    return {"sites": sites, "total": len(sites)}
+
+@app.get("/api/workers")
+async def list_workers():
+    """List all site workers"""
+    from .database.models import get_all_site_workers
+    workers = get_all_site_workers()
+    return {"workers": [w.to_dict() for w in workers], "total": len(workers)}
+
+@app.get("/api/updates/today")
+async def get_today_updates():
+    """Get all updates submitted today"""
+    from .database.models import get_todays_updates
+    updates = get_todays_updates()
+    return {
+        "date": str(__import__('datetime').date.today()),
+        "updates": [u.to_dict() for u in updates],
+        "total": len(updates)
+    }
+
+# ============================================
+# WEBSOCKET (Legacy Echo)
+# ============================================
 
 @app.websocket("/ws/voice")
 async def voice_websocket(websocket: WebSocket):
@@ -237,14 +307,8 @@ async def voice_websocket(websocket: WebSocket):
     finally:
         ws_manager.disconnect(websocket)
 
-def signal_handler(signum, frame):
-    """Handle shutdown signals gracefully"""
-    logger.info(f"Received signal {signum}, shutting down gracefully...")
-    sys.exit(0)
-
-# Register signal handlers for graceful shutdown
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+# Note: Uvicorn handles SIGINT and SIGTERM gracefully by default
+# Custom signal handlers are not needed and can conflict with uvloop
 
 if __name__ == "__main__":
     # Configure multiprocessing to avoid resource leaks

@@ -49,6 +49,6 @@ data/
 # Build artifacts
 *.tar.gz
 *.zip
-
+terraform/
 # Note: Specific .gitignore files exist in frontend/ and backend/ subdirectories
 # for language/framework specific ignores

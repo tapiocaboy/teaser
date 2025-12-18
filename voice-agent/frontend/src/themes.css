@@ -537,3 +537,42 @@
   animation: float 3s ease-in-out infinite;
 }
 
+/* ==================== CONSTRUCTION THEME ==================== */
+/* Warm industrial theme with safety orange accents */
+
+.construction {
+  --background: oklch(0.12 0.02 45);
+  --foreground: oklch(0.96 0.01 60);
+  --card: oklch(0.16 0.025 45);
+  --card-foreground: oklch(0.96 0.01 60);
+  --popover: oklch(0.16 0.025 45);
+  --popover-foreground: oklch(0.96 0.01 60);
+  --primary: oklch(0.75 0.18 75);
+  --primary-foreground: oklch(0.12 0.02 45);
+  --secondary: oklch(0.65 0.16 30);
+  --secondary-foreground: oklch(0.96 0.01 60);
+  --muted: oklch(0.2 0.02 45);
+  --muted-foreground: oklch(0.65 0.04 60);
+  --accent: oklch(0.22 0.04 45);
+  --accent-foreground: oklch(0.96 0.01 60);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.28 0.04 50);
+  --input: oklch(0.18 0.025 45);
+  --ring: oklch(0.75 0.18 75);
+  --chart-1: oklch(0.75 0.18 75);
+  --chart-2: oklch(0.65 0.16 30);
+  --chart-3: oklch(0.7 0.12 140);
+  --chart-4: oklch(0.6 0.15 240);
+  --chart-5: oklch(0.55 0.1 0);
+}
+
+.construction .echo-card {
+  border-left: 4px solid var(--primary);
+  box-shadow: 0 4px 20px color-mix(in oklch, var(--primary) 15%, transparent);
+}
+
+.construction .echo-button-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow: 0 4px 15px color-mix(in oklch, var(--primary) 40%, transparent);
+}
+

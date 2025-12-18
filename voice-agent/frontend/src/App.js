@@ -1,8 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline, Container, Box } from '@mui/material';
+import { CssBaseline, Container, Box, Button } from '@mui/material';
 import VoiceInterface from './components/VoiceInterface';
 import ParticleBackground from './components/ParticleBackground';
+import RoleSelector from './components/RoleSelector';
+import WorkerInterface from './components/WorkerInterface';
+import ManagerDashboard from './components/ManagerDashboard';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import './themes.css';
 import './App.css';
@@ -112,6 +115,15 @@ const THEME_COLORS = {
     paper: '#D4D0C8',
     text: '#000000',
     textSecondary: '#404040',
+  },
+  // Construction-focused theme
+  'construction': {
+    primary: '#f59e0b',
+    secondary: '#ea580c',
+    background: '#1c1917',
+    paper: '#292524',
+    text: '#fafaf9',
+    textSecondary: '#a8a29e',
   },
 };
 
@@ -275,13 +287,64 @@ function createAdaptiveTheme(themeId) {
           },
         },
       },
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: 'var(--border)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'var(--primary)',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: 'var(--muted-foreground)',
+            },
+            '& .MuiInputBase-input': {
+              color: 'var(--foreground)',
+            },
+          },
+        },
+      },
+      MuiSelect: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--border)',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'var(--primary)',
+            },
+          },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            color: 'var(--muted-foreground)',
+            '&.Mui-selected': {
+              color: 'var(--primary)',
+            },
+          },
+        },
+      },
+      MuiCheckbox: {
+        styleOverrides: {
+          root: {
+            color: 'var(--muted-foreground)',
+            '&.Mui-checked': {
+              color: 'var(--primary)',
+            },
+          },
+        },
+      },
     },
   });
 }
 
 // Determine if particles should be shown based on theme
 function shouldShowParticles(themeId) {
-  // Show particles for all themes except retro-90s and enterprise-slate
   return !['retro-90s', 'enterprise-slate', 'light'].includes(themeId);
 }
 
@@ -298,12 +361,24 @@ function getParticleThemeName(themeId) {
     'enterprise-elite': 'neon',
     'quantum-pro': 'neon',
     'dark': 'neon',
+    'construction': 'neon',
   };
   return particleThemeMap[themeId] || 'neon';
 }
 
+// App modes
+const APP_MODES = {
+  ROLE_SELECT: 'role_select',
+  WORKER: 'worker',
+  MANAGER: 'manager',
+  LEGACY_ECHO: 'legacy_echo',
+};
+
 function AppContent() {
   const { theme } = useTheme();
+  const [appMode, setAppMode] = useState(APP_MODES.ROLE_SELECT);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   
   const muiTheme = useMemo(
     () => createAdaptiveTheme(theme),
@@ -312,6 +387,78 @@ function AppContent() {
 
   const showParticles = shouldShowParticles(theme);
   const particleTheme = getParticleThemeName(theme);
+
+  const handleRoleSelect = (role) => {
+    setUserRole(role);
+    setAppMode(role === 'worker' ? APP_MODES.WORKER : APP_MODES.MANAGER);
+  };
+
+  const handleUserLogin = (role, user) => {
+    setUserRole(role);
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    setAppMode(APP_MODES.ROLE_SELECT);
+    setCurrentUser(null);
+    setUserRole(null);
+  };
+
+  const handleSwitchToLegacy = () => {
+    setAppMode(APP_MODES.LEGACY_ECHO);
+  };
+
+  const renderContent = () => {
+    switch (appMode) {
+      case APP_MODES.ROLE_SELECT:
+        return (
+          <Box>
+            <RoleSelector
+              onRoleSelect={handleRoleSelect}
+              onUserLogin={handleUserLogin}
+            />
+            {/* Option to use legacy Echo */}
+            <Box sx={{ textAlign: 'center', mt: 4, pb: 4 }}>
+              <Button
+                variant="text"
+                onClick={handleSwitchToLegacy}
+                sx={{ color: 'var(--muted-foreground)' }}
+              >
+                Use Classic Echo Voice Assistant →
+              </Button>
+            </Box>
+          </Box>
+        );
+
+      case APP_MODES.WORKER:
+        return <WorkerInterface user={currentUser} onLogout={handleLogout} />;
+
+      case APP_MODES.MANAGER:
+        return <ManagerDashboard user={currentUser} onLogout={handleLogout} />;
+
+      case APP_MODES.LEGACY_ECHO:
+        return (
+          <Box>
+            <Box sx={{ textAlign: 'right', mb: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setAppMode(APP_MODES.ROLE_SELECT)}
+                sx={{
+                  borderColor: 'var(--border)',
+                  color: 'var(--foreground)',
+                }}
+              >
+                ← Back to SiteVoice
+              </Button>
+            </Box>
+            <VoiceInterface />
+          </Box>
+        );
+
+      default:
+        return <RoleSelector onRoleSelect={handleRoleSelect} onUserLogin={handleUserLogin} />;
+    }
+  };
 
   return (
     <MuiThemeProvider theme={muiTheme}>
@@ -328,7 +475,7 @@ function AppContent() {
             zIndex: 1,
           }}
         >
-          <VoiceInterface />
+          {renderContent()}
         </Box>
       </Container>
     </MuiThemeProvider>
