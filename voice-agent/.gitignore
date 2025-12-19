@@ -21,6 +21,9 @@ Thumbs.db
 logs/
 *.log
 
+# PID files
+.pids/
+
 # Temporary files
 tmp/
 temp/
@@ -49,6 +52,6 @@ data/
 # Build artifacts
 *.tar.gz
 *.zip
-
+terraform/
 # Note: Specific .gitignore files exist in frontend/ and backend/ subdirectories
 # for language/framework specific ignores

@@ -24,10 +24,10 @@ models:
   tts:
     voice_model: "en_US-amy-medium"  # Piper voice model
     speaker_id: null
-    speed: 1.0
+    speed: 1.3              # 1.0 = normal, higher = faster
     noise_scale: 0.667
     noise_w: 0.8
-    length_scale: 1.0
+    length_scale: 0.9       # 1.0 = normal, lower = faster
 
 database:
   url: "sqlite:///data/conversations.db"

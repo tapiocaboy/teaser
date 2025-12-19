@@ -132,80 +132,93 @@ class PiperTTS:
 
     async def _generate_fallback_audio(self, text: str) -> bytes:
         """
-        Generate fallback audio when Piper is not available
+        Generate fallback audio when Piper is not available using gTTS
 
         Args:
             text: Text to synthesize
 
         Returns:
-            Simple audio data as bytes
+            Audio data as bytes (MP3 converted to WAV for compatibility)
         """
-        logger.info(f"Generating fallback audio for text: '{text[:50]}...' (length: {len(text)})")
+        logger.info(f"Generating fallback audio using gTTS for text: '{text[:50]}...' (length: {len(text)})")
         try:
-            import wave
+            from gtts import gTTS
+            import io
+
+            # Use gTTS to generate speech
+            tts = gTTS(text=text, lang='en', slow=False)
+            
+            # Save to bytes buffer
+            mp3_buffer = io.BytesIO()
+            tts.write_to_fp(mp3_buffer)
+            mp3_buffer.seek(0)
+            
+            logger.info(f"gTTS generated MP3: {len(mp3_buffer.getvalue())} bytes")
+            
+            # Try to convert MP3 to WAV for better browser compatibility
+            try:
+                from pydub import AudioSegment
+                
+                audio = AudioSegment.from_mp3(mp3_buffer)
+                wav_buffer = io.BytesIO()
+                audio.export(wav_buffer, format='wav')
+                wav_buffer.seek(0)
+                audio_data = wav_buffer.getvalue()
+                logger.info(f"Converted to WAV: {len(audio_data)} bytes")
+                return audio_data
+                
+            except ImportError:
+                # pydub not available, return MP3 directly
+                logger.warning("pydub not available, returning MP3 audio")
+                mp3_buffer.seek(0)
+                return mp3_buffer.getvalue()
+                
+        except ImportError:
+            logger.warning("gTTS not available, generating simple tone")
+            return await self._generate_simple_tone(text)
+        except Exception as e:
+            logger.error(f"Error generating gTTS audio: {e}")
+            return await self._generate_simple_tone(text)
+
+    async def _generate_simple_tone(self, text: str) -> bytes:
+        """Generate a simple tone as last resort fallback"""
+        try:
             import struct
-
-            # Create a simple tone based on text length
-            sample_rate = 44100  # Standard sample rate for better browser compatibility
-            duration = min(len(text) * 0.05, 2.0)  # Shorter duration
-            frequency = 600  # Hz
-
-            # Generate simple, clean sine wave (much more reliable for testing)
             import math
+
+            sample_rate = 44100
+            duration = min(len(text) * 0.02, 1.0)
+            frequency = 440.0
+            
             samples = []
             num_samples = int(sample_rate * duration)
 
-            # Simple sine wave at 440Hz (A note) - very clean and recognizable
-            frequency = 440.0
-
             for i in range(num_samples):
                 t = i / sample_rate
+                fade_in = int(sample_rate * 0.05)
+                fade_out = int(sample_rate * 0.1)
 
-                # Smooth envelope to avoid clicks
-                fade_in_samples = int(sample_rate * 0.05)  # 50ms fade in
-                fade_out_samples = int(sample_rate * 0.1)  # 100ms fade out
-
-                if i < fade_in_samples:
-                    envelope = math.sin((i / fade_in_samples) * math.pi / 2)
-                elif i > num_samples - fade_out_samples:
-                    envelope = math.sin(((num_samples - i) / fade_out_samples) * math.pi / 2)
+                if i < fade_in:
+                    envelope = math.sin((i / fade_in) * math.pi / 2)
+                elif i > num_samples - fade_out:
+                    envelope = math.sin(((num_samples - i) / fade_out) * math.pi / 2)
                 else:
                     envelope = 1.0
 
-                # Pure sine wave
-                wave = math.sin(2 * math.pi * frequency * t)
-                sample = int(32767 * 0.3 * envelope * wave)
-                sample = max(-32767, min(32767, sample))
-                samples.append(struct.pack('<h', sample))
+                wave_val = math.sin(2 * math.pi * frequency * t)
+                sample = int(32767 * 0.3 * envelope * wave_val)
+                samples.append(struct.pack('<h', max(-32767, min(32767, sample))))
 
-            # Create raw PCM data for Web Audio API (no WAV wrapper needed)
             raw_data = b''.join(samples)
-            logger.info(f"Generated raw PCM audio: {len(raw_data)} bytes, {len(samples)} samples")
-
-            # For Web Audio API, we can send raw PCM data and specify format on frontend
-            # But for compatibility, let's create a minimal WAV header
+            
             wav_header = struct.pack('<4sL4s4sLHHLLHH4sL',
-                b'RIFF',                    # ChunkID
-                36 + len(raw_data),         # ChunkSize
-                b'WAVE',                    # Format
-                b'fmt ',                    # Subchunk1ID
-                16,                         # Subchunk1Size
-                1,                          # AudioFormat (PCM)
-                1,                          # NumChannels (mono)
-                sample_rate,               # SampleRate
-                sample_rate * 1 * 2,       # ByteRate
-                1 * 2,                     # BlockAlign
-                16,                        # BitsPerSample
-                b'data',                   # Subchunk2ID
-                len(raw_data)              # Subchunk2Size
+                b'RIFF', 36 + len(raw_data), b'WAVE', b'fmt ', 16, 1, 1,
+                sample_rate, sample_rate * 2, 2, 16, b'data', len(raw_data)
             )
-
-            audio_data = wav_header + raw_data
-            logger.info(f"Created WAV with header, total size: {len(audio_data)} bytes")
-            return audio_data
-
+            
+            return wav_header + raw_data
         except Exception as e:
-            logger.error(f"Error generating fallback audio: {e}")
+            logger.error(f"Error generating simple tone: {e}")
             return b''
 
     async def _download_model(self):

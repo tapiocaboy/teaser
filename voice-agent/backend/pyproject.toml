@@ -22,7 +22,8 @@ scipy = "*"
 python-multipart = "*"
 pydantic = "*"
 python-dotenv = "*"
-
+pyyaml = "*"
+gtts = "^2.5.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
