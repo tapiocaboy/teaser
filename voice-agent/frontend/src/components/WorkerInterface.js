@@ -127,38 +127,42 @@ const WorkerInterface = ({ user, onLogout }) => {
   };
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+    <Box sx={{ maxWidth: 600, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
       {/* Header */}
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 4,
+          alignItems: 'flex-start',
+          mb: { xs: 2, sm: 3 },
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'var(--foreground)' }}>
-            👷 Daily Update
+          <Typography sx={{ fontWeight: 500, color: '#c9d1d9', fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>
+            Voice Update
           </Typography>
-          <Typography variant="body1" sx={{ color: 'var(--muted-foreground)', mt: 0.5 }}>
-            Welcome, {user?.name} • {user?.role || 'Site Worker'}
+          <Typography sx={{ color: '#484f58', mt: 0.25, fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
+            {user?.name} • {user?.role || 'Operator'}
           </Typography>
           {user?.site_location && (
             <Chip
               label={user.site_location}
               size="small"
-              sx={{ mt: 1, background: 'var(--accent)', color: 'var(--foreground)' }}
+              sx={{ mt: 0.75, fontSize: '0.65rem', height: 22, background: '#21262d', color: '#8b949e' }}
             />
           )}
         </Box>
         <Button
           variant="outlined"
-          startIcon={<Logout />}
+          size="small"
+          startIcon={<Logout sx={{ fontSize: 14 }} />}
           onClick={onLogout}
           sx={{
-            borderColor: 'var(--border)',
-            color: 'var(--foreground)',
+            borderColor: '#21262d',
+            color: '#8b949e',
+            fontSize: '0.7rem',
+            py: 0.5,
+            px: 1.5,
           }}
         >
           Logout
@@ -168,80 +172,74 @@ const WorkerInterface = ({ user, onLogout }) => {
       {/* Recording Card */}
       <Paper
         sx={{
-          p: 4,
-          mb: 3,
-          background: 'var(--card)',
-          border: '1px solid var(--border)',
-          borderRadius: 3,
+          p: { xs: 2, sm: 2.5 },
+          mb: 1.5,
+          background: '#0d1117',
+          border: '1px solid #21262d',
+          borderRadius: '2px',
           textAlign: 'center',
         }}
       >
         <Typography
-          variant="h6"
-          sx={{ mb: 3, color: 'var(--foreground)', fontWeight: 600 }}
+          sx={{ mb: 1.5, color: '#c9d1d9', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
         >
           {isRecording
-            ? '🎤 Recording your update...'
+            ? '● Recording...'
             : isProcessing
-            ? '⏳ Processing...'
-            : '📢 Record Your Daily Update'}
+            ? '◐ Processing...'
+            : 'Record Update'}
         </Typography>
 
         {isRecording && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 2 }}>
             <LinearProgress
               variant="determinate"
               value={audioLevel * 100}
               sx={{
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: 'var(--muted)',
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: '#21262d',
                 '& .MuiLinearProgress-bar': {
-                  borderRadius: 6,
-                  background: 'var(--primary)',
+                  borderRadius: 4,
+                  background: '#3b82f6',
                 },
               }}
             />
             <Typography
-              variant="body2"
-              sx={{ mt: 2, color: 'var(--muted-foreground)' }}
+              sx={{ mt: 1.5, color: '#484f58', fontSize: { xs: '0.65rem', sm: '0.7rem' } }}
             >
-              Speak clearly about your work today: tasks completed, materials used,
-              issues encountered, and any safety observations.
+              Speak clearly about your work today.
             </Typography>
           </Box>
         )}
 
         {isProcessing && (
-          <Box sx={{ mb: 3 }}>
-            <CircularProgress sx={{ color: 'var(--primary)' }} />
+          <Box sx={{ mb: 2 }}>
+            <CircularProgress size={28} sx={{ color: '#3b82f6' }} />
             <Typography
-              variant="body2"
-              sx={{ mt: 2, color: 'var(--muted-foreground)' }}
+              sx={{ mt: 1.5, color: '#484f58', fontSize: { xs: '0.65rem', sm: '0.7rem' } }}
             >
-              Transcribing and summarizing your update...
+              Processing your update...
             </Typography>
           </Box>
         )}
 
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5 }}>
           {!isRecording ? (
             <Button
               variant="contained"
-              size="large"
-              startIcon={<Mic />}
+              size="medium"
+              startIcon={<Mic sx={{ fontSize: { xs: 16, sm: 18 } }} />}
               onClick={startRecording}
               disabled={isProcessing}
               sx={{
-                px: 6,
-                py: 2,
-                fontSize: '1.1rem',
-                background: 'var(--primary)',
-                color: 'var(--primary-foreground)',
-                boxShadow: '0 0 30px color-mix(in oklch, var(--primary) 30%, transparent)',
+                px: { xs: 3, sm: 4 },
+                py: { xs: 1, sm: 1.25 },
+                fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                background: '#3b82f6',
+                color: '#ffffff',
                 '&:hover': {
-                  background: 'var(--primary)',
-                  filter: 'brightness(1.1)',
+                  background: '#2563eb',
                 },
               }}
             >
@@ -250,19 +248,17 @@ const WorkerInterface = ({ user, onLogout }) => {
           ) : (
             <Button
               variant="contained"
-              size="large"
-              startIcon={<Stop />}
+              size="medium"
+              startIcon={<Stop sx={{ fontSize: { xs: 16, sm: 18 } }} />}
               onClick={stopRecording}
               sx={{
-                px: 6,
-                py: 2,
-                fontSize: '1.1rem',
-                background: 'var(--destructive)',
-                color: 'white',
-                boxShadow: '0 0 30px color-mix(in oklch, var(--destructive) 30%, transparent)',
+                px: { xs: 3, sm: 4 },
+                py: { xs: 1, sm: 1.25 },
+                fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                background: '#f85149',
+                color: '#ffffff',
                 '&:hover': {
-                  background: 'var(--destructive)',
-                  filter: 'brightness(1.1)',
+                  background: '#da3633',
                 },
               }}
             >
@@ -274,13 +270,13 @@ const WorkerInterface = ({ user, onLogout }) => {
 
       {/* Success/Error Messages */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 2, fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
           {error}
         </Alert>
       )}
       {success && (
-        <Alert severity="success" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-          <CheckCircle sx={{ mr: 1 }} />
+        <Alert severity="success" sx={{ mb: 2, fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
+          <CheckCircle sx={{ mr: 0.5, fontSize: 16 }} />
           {success}
         </Alert>
       )}
@@ -289,34 +285,32 @@ const WorkerInterface = ({ user, onLogout }) => {
       {lastUpdate && (
         <Card
           sx={{
-            mb: 3,
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
-            borderRadius: 3,
+            mb: 2,
+            background: '#0d1117',
+            border: '1px solid #21262d',
+            borderRadius: '2px',
           }}
         >
-          <CardContent>
+          <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
             <Typography
-              variant="h6"
-              sx={{ mb: 2, color: 'var(--primary)', fontWeight: 600 }}
+              sx={{ mb: 1.5, color: '#3fb950', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
             >
-              ✅ Your Update
+              ✓ Your Update
             </Typography>
 
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 2 }}>
               <Typography
-                variant="subtitle2"
-                sx={{ color: 'var(--muted-foreground)', mb: 1 }}
+                sx={{ color: '#484f58', mb: 0.5, fontSize: { xs: '0.65rem', sm: '0.7rem' } }}
               >
-                Original Recording:
+                Original:
               </Typography>
               <Typography
-                variant="body1"
                 sx={{
-                  p: 2,
-                  background: 'var(--accent)',
-                  borderRadius: 2,
-                  color: 'var(--foreground)',
+                  p: { xs: 1, sm: 1.5 },
+                  background: '#161b22',
+                  borderRadius: '2px',
+                  color: '#c9d1d9',
+                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
                 }}
               >
                 {lastUpdate.original}
@@ -329,33 +323,32 @@ const WorkerInterface = ({ user, onLogout }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  mb: 1,
+                  mb: 0.5,
                 }}
               >
                 <Typography
-                  variant="subtitle2"
-                  sx={{ color: 'var(--muted-foreground)' }}
+                  sx={{ color: '#484f58', fontSize: { xs: '0.65rem', sm: '0.7rem' } }}
                 >
-                  Summary (for managers):
+                  Summary:
                 </Typography>
                 {lastUpdate.audio && (
                   <IconButton
                     size="small"
                     onClick={() => playAudio(lastUpdate.audio)}
-                    sx={{ color: 'var(--primary)' }}
+                    sx={{ color: '#3b82f6', p: 0.5 }}
                   >
-                    <PlayArrow />
+                    <PlayArrow sx={{ fontSize: 16 }} />
                   </IconButton>
                 )}
               </Box>
               <Typography
-                variant="body1"
                 sx={{
-                  p: 2,
-                  background: 'var(--accent)',
-                  borderRadius: 2,
-                  color: 'var(--foreground)',
-                  borderLeft: '4px solid var(--primary)',
+                  p: { xs: 1, sm: 1.5 },
+                  background: '#161b22',
+                  borderRadius: '2px',
+                  color: '#c9d1d9',
+                  borderLeft: '2px solid #3b82f6',
+                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
                 }}
               >
                 {lastUpdate.summary}
@@ -366,17 +359,19 @@ const WorkerInterface = ({ user, onLogout }) => {
       )}
 
       {/* History Toggle */}
-      <Box sx={{ textAlign: 'center', mb: 3 }}>
+      <Box sx={{ textAlign: 'center', mb: 2 }}>
         <Button
           variant="outlined"
-          startIcon={showHistory ? <Today /> : <History />}
+          size="small"
+          startIcon={showHistory ? <Today sx={{ fontSize: 14 }} /> : <History sx={{ fontSize: 14 }} />}
           onClick={() => setShowHistory(!showHistory)}
           sx={{
-            borderColor: 'var(--border)',
-            color: 'var(--foreground)',
+            borderColor: '#21262d',
+            color: '#8b949e',
+            fontSize: { xs: '0.7rem', sm: '0.75rem' },
           }}
         >
-          {showHistory ? 'Hide History' : 'View Update History'}
+          {showHistory ? 'Hide History' : 'View History'}
         </Button>
       </Box>
 
@@ -384,60 +379,54 @@ const WorkerInterface = ({ user, onLogout }) => {
       {showHistory && (
         <Card
           sx={{
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
-            borderRadius: 3,
+            background: '#0d1117',
+            border: '1px solid #21262d',
+            borderRadius: '2px',
           }}
         >
-          <CardContent>
+          <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
             <Typography
-              variant="h6"
-              sx={{ mb: 2, color: 'var(--foreground)', fontWeight: 600 }}
+              sx={{ mb: 1.5, color: '#c9d1d9', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
             >
               📅 Recent Updates
             </Typography>
 
             {updateHistory.length === 0 ? (
-              <Typography sx={{ color: 'var(--muted-foreground)', textAlign: 'center', py: 3 }}>
+              <Typography sx={{ color: '#484f58', textAlign: 'center', py: 2, fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                 No updates yet. Record your first update above!
               </Typography>
             ) : (
-              <List>
+              <List sx={{ p: 0 }}>
                 {updateHistory.map((update, index) => (
                   <React.Fragment key={update.id}>
-                    {index > 0 && <Divider sx={{ borderColor: 'var(--border)' }} />}
+                    {index > 0 && <Divider sx={{ borderColor: '#21262d' }} />}
                     <ListItem
                       sx={{
                         flexDirection: 'column',
                         alignItems: 'flex-start',
-                        py: 2,
+                        py: 1.5,
+                        px: 0,
                       }}
                     >
-                      <Box
+                      <Chip
+                        label={formatDate(update.update_date)}
+                        size="small"
                         sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          width: '100%',
-                          mb: 1,
+                          background: '#21262d',
+                          color: '#8b949e',
+                          fontSize: '0.6rem',
+                          height: 20,
+                          mb: 0.75,
                         }}
-                      >
-                        <Chip
-                          label={formatDate(update.update_date)}
-                          size="small"
-                          sx={{
-                            background: 'var(--accent)',
-                            color: 'var(--foreground)',
-                          }}
-                        />
-                      </Box>
+                      />
                       <ListItemText
                         primary={update.summary || 'No summary available'}
-                        secondary={`Full message: ${update.original_message?.substring(0, 100)}...`}
+                        secondary={update.original_message?.substring(0, 80) + '...'}
                         primaryTypographyProps={{
-                          sx: { color: 'var(--foreground)', fontWeight: 500 },
+                          sx: { color: '#c9d1d9', fontWeight: 500, fontSize: { xs: '0.7rem', sm: '0.75rem' } },
                         }}
                         secondaryTypographyProps={{
-                          sx: { color: 'var(--muted-foreground)', mt: 0.5 },
+                          sx: { color: '#484f58', mt: 0.5, fontSize: { xs: '0.65rem', sm: '0.7rem' } },
                         }}
                       />
                     </ListItem>

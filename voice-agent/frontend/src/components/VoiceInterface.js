@@ -45,7 +45,7 @@ const INITIAL_VISUALIZER_STATE = {
 // Theme is now managed via CSS variables and ThemeContext
 
 const VoiceInterface = () => {
-  const { theme, currentTheme } = useTheme();
+  const { theme } = useTheme();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -64,9 +64,9 @@ const VoiceInterface = () => {
   const audioService = useRef(new AudioService());
   const apiService = useRef(new ApiService());
 
-  // Check if current theme is a "retro" style that needs special handling
-  const isRetroTheme = theme === 'retro-90s';
-  const isMatrixTheme = theme === 'ai-matrix';
+  // Single professional theme - no special handling needed
+  const isRetroTheme = false;
+  const isMatrixTheme = false;
 
   // WebSocket connection removed - using HTTP API instead
   useEffect(() => {
@@ -419,7 +419,7 @@ const VoiceInterface = () => {
           textShadow: isMatrixTheme ? '0 0 20px var(--primary)' : 'none',
         }}
       >
-        {currentTheme?.icon || '🎭'} Echo
+        🎙️ Echo
       </Typography>
       <Typography
         variant="body1"

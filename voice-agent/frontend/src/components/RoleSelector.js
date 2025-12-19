@@ -6,16 +6,15 @@ import {
   Typography,
   Button,
   TextField,
-  Grid,
   Alert,
   CircularProgress,
   Fade,
 } from '@mui/material';
 import {
-  Construction,
-  SupervisorAccount,
   ArrowForward,
-  Engineering,
+  GraphicEq,
+  KeyboardVoice,
+  Headphones,
 } from '@mui/icons-material';
 import ConstructionApiService from '../services/ConstructionApi';
 
@@ -134,129 +133,215 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        p: 3,
+        p: { xs: 2, sm: 3 },
       }}
     >
       {/* Header */}
-      <Box sx={{ textAlign: 'center', mb: 6 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-          <Engineering sx={{ fontSize: 48, color: 'var(--primary)', mr: 2 }} />
+      <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+          <GraphicEq sx={{ fontSize: { xs: 18, sm: 20 }, color: '#60a5fa' }} />
           <Typography
-            variant="h3"
             sx={{
-              fontWeight: 800,
-              color: 'var(--foreground)',
-              letterSpacing: 2,
+              fontWeight: 500,
+              color: '#c9d1d9',
+              letterSpacing: '0.04em',
+              fontSize: { xs: '0.9rem', sm: '1rem' },
             }}
           >
-            SiteVoice
+            AKORDI ECHO
           </Typography>
         </Box>
-        <Typography
-          variant="h6"
-          sx={{ color: 'var(--muted-foreground)', maxWidth: 500 }}
-        >
-          Voice-powered daily updates for construction sites
+        <Typography sx={{ fontSize: '0.65rem', color: '#484f58', mt: 0.5 }}>
+          Voice Intelligence Platform
         </Typography>
       </Box>
 
       {!selectedRole ? (
-        // Role Selection
-        <Grid container spacing={4} justifyContent="center" sx={{ maxWidth: 800 }}>
-          <Grid item xs={12} md={6}>
-            <Card
-              onClick={() => handleRoleClick('worker')}
-              sx={{
-                cursor: 'pointer',
-                background: 'var(--card)',
-                border: '2px solid var(--border)',
-                borderRadius: 4,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  borderColor: 'var(--primary)',
-                  transform: 'translateY(-8px)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                },
-              }}
-            >
-              <CardContent sx={{ p: 5, textAlign: 'center' }}>
-                <Construction
-                  sx={{
-                    fontSize: 80,
-                    color: 'var(--primary)',
-                    mb: 2,
-                  }}
-                />
-                <Typography variant="h4" sx={{ fontWeight: 700, color: 'var(--foreground)', mb: 1 }}>
-                  Site Worker
-                </Typography>
-                <Typography variant="body1" sx={{ color: 'var(--muted-foreground)' }}>
-                  Submit your daily updates via voice
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+        // Role Selection - Mobile-First Enterprise Style
+        <Box sx={{ 
+          display: 'flex', 
+          gap: { xs: 1.5, sm: 2 }, 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'center', 
+          width: '100%',
+          maxWidth: { xs: 280, sm: 420 },
+          px: { xs: 1, sm: 0 },
+        }}>
+          {/* Operator Card */}
+          <Box
+            onClick={() => handleRoleClick('worker')}
+            sx={{
+              cursor: 'pointer',
+              position: 'relative',
+              width: { xs: '100%', sm: 180 },
+              height: { xs: 100, sm: 120 },
+              background: '#0a0d12',
+              border: '1px solid #1a2332',
+              borderRadius: '2px',
+              transition: 'all 0.2s ease',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '2px',
+                height: '100%',
+                background: '#3b82f6',
+                opacity: 0.6,
+              },
+              '&:hover': {
+                background: '#0d1117',
+                borderColor: '#2a3a4f',
+                '&::before': { opacity: 1 },
+              },
+              '&:active': {
+                background: '#0d1117',
+                '&::before': { opacity: 1 },
+              },
+            }}
+          >
+            <Box sx={{ 
+              height: '100%', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              p: { xs: 1.5, sm: 2 },
+            }}>
+              <Box sx={{
+                width: { xs: 36, sm: 40 },
+                height: { xs: 36, sm: 40 },
+                borderRadius: '4px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 1,
+              }}>
+                <KeyboardVoice sx={{ fontSize: { xs: 18, sm: 20 }, color: '#60a5fa' }} />
+              </Box>
+              
+              <Typography sx={{ 
+                fontWeight: 500, 
+                fontSize: { xs: '0.75rem', sm: '0.8rem' }, 
+                color: '#c9d1d9',
+                letterSpacing: '0.02em',
+                mb: 0.25,
+              }}>
+                Operator
+              </Typography>
+              <Typography sx={{ 
+                fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
+                color: '#586069',
+              }}>
+                Submit voice updates
+              </Typography>
+            </Box>
+          </Box>
 
-          <Grid item xs={12} md={6}>
-            <Card
-              onClick={() => handleRoleClick('manager')}
-              sx={{
-                cursor: 'pointer',
-                background: 'var(--card)',
-                border: '2px solid var(--border)',
-                borderRadius: 4,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  borderColor: 'var(--primary)',
-                  transform: 'translateY(-8px)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                },
-              }}
-            >
-              <CardContent sx={{ p: 5, textAlign: 'center' }}>
-                <SupervisorAccount
-                  sx={{
-                    fontSize: 80,
-                    color: 'var(--primary)',
-                    mb: 2,
-                  }}
-                />
-                <Typography variant="h4" sx={{ fontWeight: 700, color: 'var(--foreground)', mb: 1 }}>
-                  Site Manager
-                </Typography>
-                <Typography variant="body1" sx={{ color: 'var(--muted-foreground)' }}>
-                  Review summaries and ask questions
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+          {/* Manager Card */}
+          <Box
+            onClick={() => handleRoleClick('manager')}
+            sx={{
+              cursor: 'pointer',
+              position: 'relative',
+              width: { xs: '100%', sm: 180 },
+              height: { xs: 100, sm: 120 },
+              background: '#0a0d12',
+              border: '1px solid #1a2332',
+              borderRadius: '2px',
+              transition: 'all 0.2s ease',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '2px',
+                height: '100%',
+                background: '#8b5cf6',
+                opacity: 0.6,
+              },
+              '&:hover': {
+                background: '#0d1117',
+                borderColor: '#2a3a4f',
+                '&::before': { opacity: 1 },
+              },
+              '&:active': {
+                background: '#0d1117',
+                '&::before': { opacity: 1 },
+              },
+            }}
+          >
+            <Box sx={{ 
+              height: '100%', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              p: { xs: 1.5, sm: 2 },
+            }}>
+              <Box sx={{
+                width: { xs: 36, sm: 40 },
+                height: { xs: 36, sm: 40 },
+                borderRadius: '4px',
+                background: 'rgba(139, 92, 246, 0.1)',
+                border: '1px solid rgba(139, 92, 246, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 1,
+              }}>
+                <Headphones sx={{ fontSize: { xs: 18, sm: 20 }, color: '#a78bfa' }} />
+              </Box>
+              
+              <Typography sx={{ 
+                fontWeight: 500, 
+                fontSize: { xs: '0.75rem', sm: '0.8rem' }, 
+                color: '#c9d1d9',
+                letterSpacing: '0.02em',
+                mb: 0.25,
+              }}>
+                Manager
+              </Typography>
+              <Typography sx={{ 
+                fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
+                color: '#586069',
+              }}>
+                Review & query updates
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
       ) : (
-        // Login Form
+        // Login Form - Mobile Optimized
         <Fade in={true}>
           <Card
             sx={{
-              maxWidth: 450,
+              maxWidth: { xs: 300, sm: 340 },
               width: '100%',
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderRadius: 3,
+              mx: { xs: 2, sm: 0 },
+              background: '#0a0d12',
+              border: '1px solid #1a2332',
+              borderRadius: '2px',
             }}
           >
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+              <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 2.5 } }}>
                 {selectedRole === 'worker' ? (
-                  <Construction sx={{ fontSize: 48, color: 'var(--primary)' }} />
+                  <KeyboardVoice sx={{ fontSize: { xs: 22, sm: 24 }, color: '#60a5fa' }} />
                 ) : (
-                  <SupervisorAccount sx={{ fontSize: 48, color: 'var(--primary)' }} />
+                  <Headphones sx={{ fontSize: { xs: 22, sm: 24 }, color: '#a78bfa' }} />
                 )}
-                <Typography variant="h5" sx={{ mt: 2, fontWeight: 700, color: 'var(--foreground)' }}>
-                  {isNewUser ? 'Register' : 'Login'} as {selectedRole === 'worker' ? 'Site Worker' : 'Site Manager'}
+                <Typography sx={{ mt: 1, fontWeight: 500, color: '#c9d1d9', fontSize: { xs: '0.8rem', sm: '0.85rem' } }}>
+                  {isNewUser ? 'Register' : 'Sign In'} as {selectedRole === 'worker' ? 'Operator' : 'Manager'}
                 </Typography>
               </Box>
 
               {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
+                <Alert severity="error" sx={{ mb: 2, fontSize: '0.75rem' }}>
                   {error}
                 </Alert>
               )}
@@ -266,7 +351,8 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
                 label="Employee ID"
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
+                size="small"
                 disabled={isNewUser}
               />
 
@@ -277,14 +363,16 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
                     label="Full Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    sx={{ mb: 3 }}
+                    sx={{ mb: 2 }}
+                    size="small"
                   />
                   <TextField
                     fullWidth
                     label="Site Location"
                     value={siteLocation}
                     onChange={(e) => setSiteLocation(e.target.value)}
-                    sx={{ mb: 3 }}
+                    sx={{ mb: 2 }}
+                    size="small"
                     placeholder="e.g., Downtown Tower Project"
                   />
                   {selectedRole === 'worker' && (
@@ -292,8 +380,9 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
                       fullWidth
                       label="Role/Trade"
                       value={workerRole}
+                      size="small"
                       onChange={(e) => setWorkerRole(e.target.value)}
-                      sx={{ mb: 3 }}
+                      sx={{ mb: 2 }}
                       placeholder="e.g., Electrician, Mason, Foreman"
                     />
                   )}
@@ -303,26 +392,27 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
               <Button
                 fullWidth
                 variant="contained"
-                size="large"
+                size="medium"
                 onClick={isNewUser ? handleRegister : handleLogin}
                 disabled={isLoading}
-                endIcon={isLoading ? <CircularProgress size={20} /> : <ArrowForward />}
+                endIcon={isLoading ? <CircularProgress size={16} /> : <ArrowForward sx={{ fontSize: 16 }} />}
                 sx={{
-                  py: 1.5,
-                  background: 'var(--primary)',
-                  color: 'var(--primary-foreground)',
+                  py: { xs: 1, sm: 1.25 },
+                  fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                  background: '#3b82f6',
+                  color: '#ffffff',
                   '&:hover': {
-                    background: 'var(--primary)',
-                    filter: 'brightness(1.1)',
+                    background: '#2563eb',
                   },
                 }}
               >
-                {isLoading ? 'Please wait...' : isNewUser ? 'Register & Continue' : 'Continue'}
+                {isLoading ? 'Please wait...' : isNewUser ? 'Register' : 'Continue'}
               </Button>
 
               <Button
                 fullWidth
                 variant="text"
+                size="small"
                 onClick={() => {
                   if (isNewUser) {
                     setIsNewUser(false);
@@ -330,7 +420,7 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
                     setSelectedRole(null);
                   }
                 }}
-                sx={{ mt: 2, color: 'var(--muted-foreground)' }}
+                sx={{ mt: 1.5, color: '#484f58', fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
               >
                 {isNewUser ? 'Back to Login' : 'Choose Different Role'}
               </Button>

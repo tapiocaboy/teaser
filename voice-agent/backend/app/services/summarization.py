@@ -9,22 +9,26 @@ from ..llm.ollama_service import OllamaLLM
 logger = logging.getLogger(__name__)
 
 
-SUMMARIZATION_SYSTEM_PROMPT = """You are a construction site update summarizer. Your job is to create concise, actionable summaries of daily worker updates.
+SUMMARIZATION_SYSTEM_PROMPT = """You are a construction site update summarizer. Your ONLY job is to condense the worker's exact words into a shorter form.
 
-When summarizing, focus on:
-1. Work completed today (specific tasks and areas)
-2. Materials used or needed
-3. Issues, blockers, or delays encountered
-4. Safety observations or concerns
-5. Progress percentage or milestones reached
-6. Weather impacts if mentioned
-7. Coordination with other trades
+CRITICAL RULES - FOLLOW STRICTLY:
+1. ONLY use information explicitly stated in the input
+2. DO NOT add, infer, assume, or make up ANY details
+3. DO NOT add percentages, numbers, or metrics unless the worker said them
+4. DO NOT add safety concerns unless the worker mentioned them
+5. DO NOT add materials, issues, or progress unless explicitly stated
+6. If something is unclear, summarize it as stated - do not clarify or interpret
+7. If the input is vague, the summary should also be vague
+8. NEVER hallucinate or fabricate any information
 
-Keep summaries under 100 words while preserving all critical details.
-Format the summary as a clear, professional report.
-Do not add information that wasn't in the original update.
+Focus on condensing what was actually said:
+- Work mentioned as completed
+- Materials explicitly mentioned  
+- Issues explicitly mentioned
+- Any other details the worker actually stated
 
-Respond with ONLY the summary text, no JSON formatting."""
+Keep summaries under 80 words. Use only facts from the input.
+Respond with ONLY the summary text, no formatting."""
 
 
 class SummarizationService:
@@ -72,13 +76,14 @@ class SummarizationService:
             context = " | ".join(context_parts) if context_parts else None
 
             # Create prompt for summarization
-            prompt = f"""Summarize this construction site daily update:
+            prompt = f"""Summarize ONLY what is stated in this worker's update. Do not add any information that is not explicitly mentioned.
 
+WORKER'S UPDATE:
 ---
 {original_message}
 ---
 
-Provide a concise summary focusing on work done, materials, issues, and progress."""
+Create a brief summary using ONLY the information above. If something is not mentioned, do not include it."""
 
             # Generate summary using LLM
             result = await self.llm.generate_response(
@@ -154,16 +159,14 @@ Provide a concise summary focusing on work done, materials, issues, and progress
 {combined_text}
 ---
 
-Provide an executive summary highlighting:
-1. Overall progress across all workers
-2. Key accomplishments
-3. Common issues or blockers
-4. Safety concerns if any
-5. Recommendations or priorities"""
+Summarize ONLY what the workers actually reported. Do not add any information not explicitly stated above."""
 
-            system_prompt = """You are a construction site project coordinator. 
-Create executive summaries that help site managers understand overall progress.
-Be concise but comprehensive. Highlight patterns across workers.
+            system_prompt = """You are a construction site report summarizer.
+CRITICAL: Only include information explicitly stated by workers.
+DO NOT add, infer, or assume any details not in the input.
+DO NOT add recommendations, priorities, or suggestions.
+DO NOT add safety concerns unless workers mentioned them.
+Simply condense the workers' actual reports into a shorter form.
 Respond with ONLY the summary text."""
 
             result = await self.llm.generate_response(

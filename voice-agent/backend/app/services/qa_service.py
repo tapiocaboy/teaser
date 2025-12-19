@@ -16,27 +16,31 @@ from ..database.models import (
 logger = logging.getLogger(__name__)
 
 
-SINGLE_WORKER_SYSTEM_PROMPT = """You are an AI assistant helping a construction site manager understand worker updates.
+SINGLE_WORKER_SYSTEM_PROMPT = """You are an AI assistant answering questions about worker updates.
 
-You have access to the recent updates from a specific worker. Answer questions based ONLY on the information provided in the context.
+CRITICAL RULES - FOLLOW STRICTLY:
+1. Answer ONLY using information explicitly stated in the provided updates
+2. DO NOT make up, infer, or assume ANY information
+3. DO NOT add details that are not in the updates
+4. If the answer is not in the updates, say "This information was not mentioned in the updates"
+5. When citing information, reference the specific date it was mentioned
+6. Be concise and factual
 
-Be specific and cite which update or date you're referring to when answering.
-If the information isn't in the provided updates, say so clearly.
-Keep responses concise but informative.
-
-Respond with a clear, direct answer. No JSON formatting needed."""
+If asked about something not covered in the updates, clearly state it wasn't mentioned.
+Never fabricate or guess information."""
 
 
-MULTI_WORKER_SYSTEM_PROMPT = """You are an AI assistant helping a construction site manager understand updates from multiple workers.
+MULTI_WORKER_SYSTEM_PROMPT = """You are an AI assistant answering questions about multiple workers' updates.
 
-You have access to recent updates from several workers. When answering:
-1. Provide a comprehensive answer considering all workers
-2. Compare or contrast information between workers when relevant
-3. Identify patterns or common themes
-4. Be specific about which worker said what
-5. If information isn't available, say so clearly
+CRITICAL RULES - FOLLOW STRICTLY:
+1. Answer ONLY using information explicitly stated in the provided updates
+2. DO NOT make up, infer, or assume ANY information
+3. DO NOT add details that are not in the updates
+4. Always specify which worker said what
+5. If information is not available, say "This was not mentioned in the updates"
+6. Do not draw conclusions beyond what workers explicitly stated
 
-Respond with a clear, organized answer. No JSON formatting needed."""
+Only report facts from the updates. Never fabricate information."""
 
 
 class QAService:
@@ -115,14 +119,14 @@ Summary: {update.summary or 'No summary available'}
             context = self._build_context_from_updates(updates)
 
             # Create prompt
-            prompt = f"""Based on the following updates from {worker.name} ({worker.role or 'Worker'}), answer this question:
+            prompt = f"""Answer this question using ONLY the information in the updates below. Do not add any information not explicitly stated.
 
 Question: {question}
 
-Worker Updates:
+Updates from {worker.name} ({worker.role or 'Worker'}):
 {context}
 
-Please provide a clear, specific answer based on the updates above."""
+IMPORTANT: If the answer is not in the updates above, say "This information was not mentioned in the updates." Do not guess or make up information."""
 
             # Generate answer
             result = await self.llm.generate_response(
@@ -213,15 +217,14 @@ Please provide a clear, specific answer based on the updates above."""
             # Create prompt
             worker_list = ", ".join([f"{name} ({info['role'] or 'Worker'})" for name, info in workers_info.items()])
 
-            prompt = f"""Based on updates from the following workers: {worker_list}
+            prompt = f"""Answer this question using ONLY the information in the updates below. Do not add any information not explicitly stated.
 
-Answer this question:
-{question}
+Question: {question}
 
-Worker Updates:
+Updates from workers ({worker_list}):
 {context}
 
-Provide a comprehensive answer that considers information from all workers. Note any differences or patterns between workers."""
+IMPORTANT: Only use information explicitly stated above. Specify which worker mentioned what. If something is not in the updates, say "This was not mentioned in the updates." Do not guess or fabricate information."""
 
             # Generate answer
             result = await self.llm.generate_response(
@@ -298,20 +301,22 @@ Provide a comprehensive answer that considers information from all workers. Note
             # Build context
             context = self._build_context_from_updates(updates)
 
-            prompt = f"""Create an executive summary for site "{site_location}" based on today's worker updates:
+            prompt = f"""Summarize ONLY what workers reported for site "{site_location}" today:
 
 {context}
 
-Include:
-1. Overall progress and accomplishments
-2. Active work areas
-3. Issues or blockers affecting the site
-4. Safety observations
-5. Recommendations for tomorrow"""
+Summarize ONLY:
+- What work was actually mentioned
+- Issues explicitly stated by workers
+- Any other details workers actually reported
 
-            system_prompt = """You are a construction site coordinator creating daily site summaries.
-Be concise but comprehensive. Prioritize actionable information.
-Respond with the summary only, no JSON."""
+Do NOT add recommendations, predictions, or information not in the updates."""
+
+            system_prompt = """You are a construction site report summarizer.
+CRITICAL: Only include information explicitly stated by workers.
+DO NOT add recommendations, suggestions, or inferred information.
+Simply condense what workers actually reported.
+Respond with the summary only."""
 
             result = await self.llm.generate_response(
                 prompt=prompt,
@@ -371,19 +376,20 @@ Respond with the summary only, no JSON."""
 
             context = self._build_context_from_updates(updates)
 
-            prompt = f"""Compare the following workers based on their recent updates, focusing on {comparison_aspect}:
+            prompt = f"""Compare what these workers reported, focusing on {comparison_aspect}:
 
 {context}
 
-Provide a comparison that:
-1. Highlights differences in {comparison_aspect} between workers
-2. Identifies top performers
-3. Notes any concerns or areas needing attention
-4. Provides actionable recommendations"""
+ONLY report:
+- What each worker actually stated about {comparison_aspect}
+- Differences in what they reported
 
-            system_prompt = f"""You are helping a construction site manager compare worker performance.
-Focus on {comparison_aspect} metrics and provide objective, fair comparisons.
-Base your analysis only on the provided updates."""
+DO NOT add performance judgments, recommendations, or inferred information. Only use facts from the updates."""
+
+            system_prompt = f"""You are comparing worker reports.
+CRITICAL: Only state facts from the updates. Do not judge performance.
+Do not add recommendations or inferred information.
+Simply report what each worker stated about {comparison_aspect}."""
 
             result = await self.llm.generate_response(
                 prompt=prompt,

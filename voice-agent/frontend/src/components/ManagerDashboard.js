@@ -248,32 +248,36 @@ const ManagerDashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
       {/* Header */}
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 4,
+          alignItems: 'flex-start',
+          mb: { xs: 2, sm: 3 },
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'var(--foreground)' }}>
-            <Dashboard sx={{ mr: 1, verticalAlign: 'middle' }} />
-            Manager Dashboard
+          <Typography sx={{ fontWeight: 500, color: '#c9d1d9', fontSize: { xs: '0.85rem', sm: '0.95rem' }, display: 'flex', alignItems: 'center' }}>
+            <Dashboard sx={{ mr: 0.5, fontSize: { xs: 16, sm: 18 } }} />
+            Dashboard
           </Typography>
-          <Typography variant="body1" sx={{ color: 'var(--muted-foreground)', mt: 0.5 }}>
-            Welcome, {user?.name}
+          <Typography sx={{ color: '#484f58', mt: 0.25, fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
+            {user?.name}
           </Typography>
         </Box>
         <Button
           variant="outlined"
-          startIcon={<Logout />}
+          size="small"
+          startIcon={<Logout sx={{ fontSize: 14 }} />}
           onClick={onLogout}
           sx={{
-            borderColor: 'var(--border)',
-            color: 'var(--foreground)',
+            borderColor: '#21262d',
+            color: '#8b949e',
+            fontSize: '0.7rem',
+            py: 0.5,
+            px: 1.5,
           }}
         >
           Logout
@@ -282,7 +286,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+        <Alert severity="error" sx={{ mb: 2, fontSize: { xs: '0.7rem', sm: '0.75rem' } }} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
@@ -291,21 +295,26 @@ const ManagerDashboard = ({ user, onLogout }) => {
       <Tabs
         value={activeTab}
         onChange={(e, v) => setActiveTab(v)}
+        variant="fullWidth"
         sx={{
-          mb: 3,
+          mb: { xs: 2, sm: 2.5 },
+          minHeight: { xs: 40, sm: 48 },
           '& .MuiTab-root': {
-            color: 'var(--muted-foreground)',
+            color: '#484f58',
+            fontSize: { xs: '0.65rem', sm: '0.75rem' },
+            minHeight: { xs: 40, sm: 48 },
+            py: { xs: 0.5, sm: 1 },
             '&.Mui-selected': {
-              color: 'var(--primary)',
+              color: '#c9d1d9',
             },
           },
           '& .MuiTabs-indicator': {
-            backgroundColor: 'var(--primary)',
+            backgroundColor: '#3b82f6',
           },
         }}
       >
-        <Tab icon={<Summarize />} label="Daily Summary" />
-        <Tab icon={<QuestionAnswer />} label="Ask Questions" />
+        <Tab icon={<Summarize sx={{ fontSize: { xs: 16, sm: 18 } }} />} label="Summary" iconPosition="start" />
+        <Tab icon={<QuestionAnswer sx={{ fontSize: { xs: 16, sm: 18 } }} />} label="Ask" iconPosition="start" />
       </Tabs>
 
       {/* Tab 0: Daily Summary */}
@@ -314,15 +323,15 @@ const ManagerDashboard = ({ user, onLogout }) => {
           {/* Filters */}
           <Paper
             sx={{
-              p: 3,
-              mb: 3,
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderRadius: 2,
+              p: { xs: 1.5, sm: 2 },
+              mb: { xs: 1.5, sm: 2 },
+              background: '#0d1117',
+              border: '1px solid #21262d',
+              borderRadius: '2px',
             }}
           >
-            <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={4}>
+            <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
+              <Grid item xs={6} sm={4}>
                 <TextField
                   fullWidth
                   type="date"
@@ -330,47 +339,53 @@ const ManagerDashboard = ({ user, onLogout }) => {
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   InputLabelProps={{ shrink: true }}
+                  size="small"
+                  sx={{ '& .MuiInputBase-input': { fontSize: { xs: '0.7rem', sm: '0.8rem' } } }}
                 />
               </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Site Location</InputLabel>
+              <Grid item xs={6} sm={4}>
+                <FormControl fullWidth size="small">
+                  <InputLabel sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>Site</InputLabel>
                   <Select
                     value={selectedSite}
                     onChange={(e) => setSelectedSite(e.target.value)}
-                    label="Site Location"
+                    label="Site"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
                   >
-                    <MenuItem value="">All Sites</MenuItem>
+                    <MenuItem value="" sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>All Sites</MenuItem>
                     {sites.map((site) => (
-                      <MenuItem key={site} value={site}>
+                      <MenuItem key={site} value={site} sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
                         {site}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} sm={4}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
                     variant="outlined"
-                    startIcon={<Refresh />}
+                    size="small"
+                    startIcon={<Refresh sx={{ fontSize: 14 }} />}
                     onClick={loadUpdates}
-                    sx={{ flex: 1 }}
+                    sx={{ flex: 1, fontSize: { xs: '0.65rem', sm: '0.7rem' } }}
                   >
                     Refresh
                   </Button>
                   <Button
                     variant="contained"
-                    startIcon={<Summarize />}
+                    size="small"
+                    startIcon={<Summarize sx={{ fontSize: 14 }} />}
                     onClick={loadAggregatedSummary}
                     disabled={isLoading}
                     sx={{
                       flex: 1,
-                      background: 'var(--primary)',
-                      '&:hover': { filter: 'brightness(1.1)' },
+                      fontSize: { xs: '0.65rem', sm: '0.7rem' },
+                      background: '#3b82f6',
+                      '&:hover': { background: '#2563eb' },
                     }}
                   >
-                    Generate Summary
+                    Summarize
                   </Button>
                 </Box>
               </Grid>
@@ -381,35 +396,36 @@ const ManagerDashboard = ({ user, onLogout }) => {
           {aggregatedSummary && (
             <Card
               sx={{
-                mb: 3,
-                background: 'var(--card)',
-                border: '2px solid var(--primary)',
-                borderRadius: 3,
+                mb: { xs: 1.5, sm: 2 },
+                background: '#0d1117',
+                border: '1px solid #3b82f6',
+                borderRadius: '2px',
               }}
             >
-              <CardContent>
+              <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                 <Box
                   sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
-                    mb: 2,
+                    alignItems: 'flex-start',
+                    mb: 1.5,
                   }}
                 >
-                  <Typography variant="h6" sx={{ color: 'var(--primary)', fontWeight: 700 }}>
-                    📊 Daily Summary - {formatDate(aggregatedSummary.date)}
+                  <Typography sx={{ color: '#3b82f6', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
+                    Summary - {formatDate(aggregatedSummary.date)}
                   </Typography>
-                  <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <Chip
-                      label={`${aggregatedSummary.update_count} updates`}
+                      label={`${aggregatedSummary.update_count}`}
                       size="small"
-                      sx={{ mr: 1, background: 'var(--accent)' }}
+                      sx={{ background: '#21262d', color: '#8b949e', fontSize: '0.6rem', height: 20 }}
                     />
                     <IconButton
+                      size="small"
                       onClick={() => playAudio(aggregatedSummary.summary_audio)}
-                      sx={{ color: 'var(--primary)' }}
+                      sx={{ color: '#3b82f6', p: 0.5 }}
                     >
-                      <PlayArrow />
+                      <PlayArrow sx={{ fontSize: 16 }} />
                     </IconButton>
                   </Box>
                 </Box>
