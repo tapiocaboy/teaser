@@ -1,7 +1,0 @@
-stages:
-  - dummy
-
-dummy_job:
-  stage: dummy
-  script:
-    - echo "No actual pipeline needed"

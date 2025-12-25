@@ -46,6 +46,10 @@ import {
   Today,
   CalendarMonth,
   Refresh,
+  Security,
+  Shield,
+  FiberManualRecord,
+  Radar,
 } from '@mui/icons-material';
 import AudioService from '../services/AudioService';
 import ConstructionApiService from '../services/ConstructionApi';
@@ -94,7 +98,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
       setWorkers(workersResult.workers || []);
       setSites(sitesResult.sites || []);
     } catch (err) {
-      setError('Failed to load initial data');
+      setError('Failed to load operational data');
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +111,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
       const result = await api.current.getUpdatesByDate(selectedDate, selectedSite || null);
       setTodayUpdates(result.updates || []);
     } catch (err) {
-      setError('Failed to load updates');
+      setError('Failed to retrieve intel reports');
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +127,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
       );
       setAggregatedSummary(result);
     } catch (err) {
-      setError('Failed to generate summary');
+      setError('Failed to generate intelligence briefing');
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +147,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
 
   const handleSubmitTextQuestion = async () => {
     if (!question.trim()) {
-      setError('Please enter a question');
+      setError('Please enter an intelligence query');
       return;
     }
 
@@ -166,7 +170,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
           question
         );
       } else {
-        setError('Please select worker(s) to query');
+        setError('Please select agent(s) to query');
         setIsProcessingQuery(false);
         return;
       }
@@ -189,7 +193,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
         null
       );
     } catch (err) {
-      setError('Failed to start recording');
+      setError('Failed to access secure audio channel');
       setIsRecordingQuestion(false);
     }
   };
@@ -200,7 +204,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
     try {
       await audioService.current.stopRecording();
     } catch (err) {
-      setError('Failed to stop recording');
+      setError('Transmission interrupted');
     }
   };
 
@@ -248,7 +252,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
+    <Box sx={{ maxWidth: 900, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
       {/* Header */}
       <Box
         sx={{
@@ -259,12 +263,41 @@ const ManagerDashboard = ({ user, onLogout }) => {
         }}
       >
         <Box>
-          <Typography sx={{ fontWeight: 500, color: '#c9d1d9', fontSize: { xs: '0.85rem', sm: '0.95rem' }, display: 'flex', alignItems: 'center' }}>
-            <Dashboard sx={{ mr: 0.5, fontSize: { xs: 16, sm: 18 } }} />
-            Dashboard
-          </Typography>
-          <Typography sx={{ color: '#484f58', mt: 0.25, fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
-            {user?.name}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Security sx={{ fontSize: 20, color: '#2563eb' }} />
+            <Typography sx={{ 
+              fontFamily: '"JetBrains Mono", monospace',
+              fontWeight: 600, 
+              color: '#e2e8f0', 
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}>
+              Command Center
+            </Typography>
+            <Chip
+              size="small"
+              icon={<FiberManualRecord sx={{ fontSize: '8px !important', color: '#16a34a !important' }} />}
+              label="ONLINE"
+              sx={{
+                ml: 1,
+                height: 20,
+                background: 'rgba(22, 163, 74, 0.15)',
+                border: '1px solid rgba(22, 163, 74, 0.3)',
+                color: '#86efac',
+                fontSize: '0.6rem',
+                fontFamily: '"JetBrains Mono", monospace',
+                letterSpacing: '0.1em',
+              }}
+            />
+          </Box>
+          <Typography sx={{ 
+            color: '#64748b', 
+            mt: 0.25, 
+            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+            fontFamily: '"JetBrains Mono", monospace',
+          }}>
+            Commander: {user?.name}
           </Typography>
         </Box>
         <Button
@@ -273,11 +306,18 @@ const ManagerDashboard = ({ user, onLogout }) => {
           startIcon={<Logout sx={{ fontSize: 14 }} />}
           onClick={onLogout}
           sx={{
-            borderColor: '#21262d',
-            color: '#8b949e',
+            borderColor: '#1e3a5f',
+            color: '#64748b',
             fontSize: '0.7rem',
             py: 0.5,
             px: 1.5,
+            fontFamily: '"JetBrains Mono", monospace',
+            letterSpacing: '0.05em',
+            '&:hover': {
+              borderColor: '#dc2626',
+              color: '#fca5a5',
+              background: 'rgba(220, 38, 38, 0.1)',
+            },
           }}
         >
           Logout
@@ -298,36 +338,42 @@ const ManagerDashboard = ({ user, onLogout }) => {
         variant="fullWidth"
         sx={{
           mb: { xs: 2, sm: 2.5 },
-          minHeight: { xs: 40, sm: 48 },
+          minHeight: { xs: 44, sm: 52 },
+          background: 'rgba(15, 23, 42, 0.5)',
+          borderRadius: '3px',
+          border: '1px solid #1e3a5f',
           '& .MuiTab-root': {
-            color: '#484f58',
-            fontSize: { xs: '0.65rem', sm: '0.75rem' },
-            minHeight: { xs: 40, sm: 48 },
+            color: '#64748b',
+            fontSize: { xs: '0.7rem', sm: '0.8rem' },
+            minHeight: { xs: 44, sm: 52 },
             py: { xs: 0.5, sm: 1 },
+            fontFamily: '"JetBrains Mono", monospace',
+            letterSpacing: '0.08em',
             '&.Mui-selected': {
-              color: '#c9d1d9',
+              color: '#e2e8f0',
             },
           },
           '& .MuiTabs-indicator': {
-            backgroundColor: '#3b82f6',
+            backgroundColor: '#dc2626',
+            height: 3,
           },
         }}
       >
-        <Tab icon={<Summarize sx={{ fontSize: { xs: 16, sm: 18 } }} />} label="Summary" iconPosition="start" />
-        <Tab icon={<QuestionAnswer sx={{ fontSize: { xs: 16, sm: 18 } }} />} label="Ask" iconPosition="start" />
+        <Tab icon={<Radar sx={{ fontSize: { xs: 18, sm: 20 } }} />} label="Intel Briefing" iconPosition="start" />
+        <Tab icon={<QuestionAnswer sx={{ fontSize: { xs: 18, sm: 20 } }} />} label="Query Agents" iconPosition="start" />
       </Tabs>
 
-      {/* Tab 0: Daily Summary */}
+      {/* Tab 0: Intel Briefing */}
       {activeTab === 0 && (
         <Box>
           {/* Filters */}
           <Paper
             sx={{
-              p: { xs: 1.5, sm: 2 },
-              mb: { xs: 1.5, sm: 2 },
-              background: '#0d1117',
-              border: '1px solid #21262d',
-              borderRadius: '2px',
+              p: { xs: 2, sm: 2.5 },
+              mb: { xs: 2, sm: 2.5 },
+              background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.3) 100%)',
+              border: '1px solid #1e3a5f',
+              borderRadius: '3px',
             }}
           >
             <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
@@ -335,7 +381,7 @@ const ManagerDashboard = ({ user, onLogout }) => {
                 <TextField
                   fullWidth
                   type="date"
-                  label="Date"
+                  label="Operation Date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   InputLabelProps={{ shrink: true }}
@@ -345,14 +391,14 @@ const ManagerDashboard = ({ user, onLogout }) => {
               </Grid>
               <Grid item xs={6} sm={4}>
                 <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>Site</InputLabel>
+                  <InputLabel sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>Sector</InputLabel>
                   <Select
                     value={selectedSite}
                     onChange={(e) => setSelectedSite(e.target.value)}
-                    label="Site"
+                    label="Sector"
                     sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
                   >
-                    <MenuItem value="" sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>All Sites</MenuItem>
+                    <MenuItem value="" sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>All Sectors</MenuItem>
                     {sites.map((site) => (
                       <MenuItem key={site} value={site} sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
                         {site}
@@ -368,7 +414,11 @@ const ManagerDashboard = ({ user, onLogout }) => {
                     size="small"
                     startIcon={<Refresh sx={{ fontSize: 14 }} />}
                     onClick={loadUpdates}
-                    sx={{ flex: 1, fontSize: { xs: '0.65rem', sm: '0.7rem' } }}
+                    sx={{ 
+                      flex: 1, 
+                      fontSize: { xs: '0.65rem', sm: '0.7rem' },
+                      fontFamily: '"JetBrains Mono", monospace',
+                    }}
                   >
                     Refresh
                   </Button>
@@ -381,11 +431,15 @@ const ManagerDashboard = ({ user, onLogout }) => {
                     sx={{
                       flex: 1,
                       fontSize: { xs: '0.65rem', sm: '0.7rem' },
-                      background: '#3b82f6',
-                      '&:hover': { background: '#2563eb' },
+                      fontFamily: '"JetBrains Mono", monospace',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
+                      '&:hover': { 
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                        boxShadow: '0 0 20px rgba(37, 99, 235, 0.4)',
+                      },
                     }}
                   >
-                    Summarize
+                    Generate Briefing
                   </Button>
                 </Box>
               </Grid>
@@ -396,45 +450,80 @@ const ManagerDashboard = ({ user, onLogout }) => {
           {aggregatedSummary && (
             <Card
               sx={{
-                mb: { xs: 1.5, sm: 2 },
-                background: '#0d1117',
-                border: '1px solid #3b82f6',
-                borderRadius: '2px',
+                mb: { xs: 2, sm: 2.5 },
+                background: 'linear-gradient(135deg, #0f172a 0%, rgba(37, 99, 235, 0.15) 100%)',
+                border: '1px solid #2563eb',
+                borderRadius: '3px',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '3px',
+                  height: '100%',
+                  background: '#2563eb',
+                },
               }}
             >
-              <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                 <Box
                   sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
-                    mb: 1.5,
+                    mb: 2,
                   }}
                 >
-                  <Typography sx={{ color: '#3b82f6', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
-                    Summary - {formatDate(aggregatedSummary.date)}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box>
+                    <Typography sx={{ 
+                      color: '#93c5fd', 
+                      fontFamily: '"JetBrains Mono", monospace',
+                      fontWeight: 600, 
+                      fontSize: { xs: '0.8rem', sm: '0.85rem' },
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                    }}>
+                      Intelligence Briefing
+                    </Typography>
+                    <Typography sx={{ 
+                      color: '#64748b', 
+                      fontSize: '0.65rem',
+                      fontFamily: '"JetBrains Mono", monospace',
+                      mt: 0.5,
+                    }}>
+                      {formatDate(aggregatedSummary.date)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip
-                      label={`${aggregatedSummary.update_count}`}
+                      label={`${aggregatedSummary.update_count} REPORTS`}
                       size="small"
-                      sx={{ background: '#21262d', color: '#8b949e', fontSize: '0.6rem', height: 20 }}
+                      sx={{ 
+                        background: 'rgba(30, 58, 95, 0.5)', 
+                        color: '#93c5fd', 
+                        fontSize: '0.6rem', 
+                        height: 22,
+                        fontFamily: '"JetBrains Mono", monospace',
+                        border: '1px solid rgba(37, 99, 235, 0.3)',
+                      }}
                     />
                     <IconButton
                       size="small"
                       onClick={() => playAudio(aggregatedSummary.summary_audio)}
-                      sx={{ color: '#3b82f6', p: 0.5 }}
+                      sx={{ color: '#2563eb', p: 0.5 }}
                     >
-                      <PlayArrow sx={{ fontSize: 16 }} />
+                      <PlayArrow sx={{ fontSize: 18 }} />
                     </IconButton>
                   </Box>
                 </Box>
                 <Typography
-                  variant="body1"
                   sx={{
-                    color: 'var(--foreground)',
+                    color: '#e2e8f0',
                     lineHeight: 1.8,
                     whiteSpace: 'pre-line',
+                    fontFamily: '"JetBrains Mono", monospace',
+                    fontSize: { xs: '0.75rem', sm: '0.8rem' },
                   }}
                 >
                   {aggregatedSummary.summary}
@@ -444,25 +533,38 @@ const ManagerDashboard = ({ user, onLogout }) => {
           )}
 
           {/* Individual Updates */}
-          <Typography variant="h6" sx={{ mb: 2, color: 'var(--foreground)' }}>
-            Individual Updates ({todayUpdates.length})
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Shield sx={{ fontSize: 16, color: '#dc2626' }} />
+            <Typography sx={{ 
+              color: '#e2e8f0',
+              fontFamily: '"JetBrains Mono", monospace',
+              fontWeight: 600,
+              fontSize: { xs: '0.8rem', sm: '0.85rem' },
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase',
+            }}>
+              Field Reports ({todayUpdates.length})
+            </Typography>
+          </Box>
 
           {isLoading ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <CircularProgress sx={{ color: 'var(--primary)' }} />
+              <CircularProgress sx={{ color: '#dc2626' }} />
             </Box>
           ) : todayUpdates.length === 0 ? (
             <Paper
               sx={{
                 p: 4,
                 textAlign: 'center',
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.3) 100%)',
+                border: '1px solid #1e3a5f',
               }}
             >
-              <Typography sx={{ color: 'var(--muted-foreground)' }}>
-                No updates for the selected date/site
+              <Typography sx={{ 
+                color: '#64748b',
+                fontFamily: '"JetBrains Mono", monospace',
+              }}>
+                No field reports for selected parameters
               </Typography>
             </Paper>
           ) : (
@@ -472,50 +574,95 @@ const ManagerDashboard = ({ user, onLogout }) => {
                   key={update.id}
                   sx={{
                     mb: 1,
-                    background: 'var(--card)',
-                    border: '1px solid var(--border)',
+                    background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.3) 100%)',
+                    border: '1px solid #1e3a5f',
+                    borderRadius: '3px !important',
                     '&:before': { display: 'none' },
+                    '&:hover': {
+                      borderColor: '#2563eb',
+                    },
                   }}
                 >
-                  <AccordionSummary expandIcon={<ExpandMore />}>
+                  <AccordionSummary 
+                    expandIcon={<ExpandMore sx={{ color: '#64748b' }} />}
+                    sx={{
+                      '&:hover': {
+                        background: 'rgba(37, 99, 235, 0.05)',
+                      },
+                    }}
+                  >
                     <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: 'var(--primary)' }}>
-                        {update.worker_name?.[0] || 'W'}
+                      <Avatar sx={{ 
+                        bgcolor: 'rgba(220, 38, 38, 0.2)', 
+                        border: '1px solid rgba(220, 38, 38, 0.3)',
+                        color: '#fca5a5',
+                        width: 36,
+                        height: 36,
+                        fontSize: '0.85rem',
+                        fontFamily: '"JetBrains Mono", monospace',
+                      }}>
+                        {update.worker_name?.[0] || 'A'}
                       </Avatar>
                     </ListItemAvatar>
                     <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ fontWeight: 600, color: 'var(--foreground)' }}>
+                      <Typography sx={{ 
+                        fontWeight: 600, 
+                        color: '#e2e8f0',
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.8rem',
+                      }}>
                         {update.worker_name}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'var(--muted-foreground)' }}>
+                      <Typography sx={{ 
+                        color: '#64748b',
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.7rem',
+                      }}>
                         {update.worker_role} • {update.site_location}
                       </Typography>
                     </Box>
                   </AccordionSummary>
-                  <AccordionDetails>
+                  <AccordionDetails sx={{ borderTop: '1px solid #1e3a5f', pt: 2 }}>
                     <Box sx={{ mb: 2 }}>
                       <Typography
-                        variant="subtitle2"
-                        sx={{ color: 'var(--primary)', mb: 1 }}
+                        sx={{ 
+                          color: '#2563eb', 
+                          mb: 1,
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.7rem',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                        }}
                       >
-                        Summary:
+                        Intelligence Summary:
                       </Typography>
-                      <Typography sx={{ color: 'var(--foreground)' }}>
+                      <Typography sx={{ 
+                        color: '#e2e8f0',
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.75rem',
+                      }}>
                         {update.summary || 'No summary available'}
                       </Typography>
                     </Box>
                     <Box>
                       <Typography
-                        variant="subtitle2"
-                        sx={{ color: 'var(--muted-foreground)', mb: 1 }}
+                        sx={{ 
+                          color: '#64748b', 
+                          mb: 1,
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.7rem',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                        }}
                       >
-                        Original Message:
+                        Original Transmission:
                       </Typography>
                       <Typography
-                        variant="body2"
                         sx={{
-                          color: 'var(--muted-foreground)',
+                          color: '#94a3b8',
                           fontStyle: 'italic',
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.7rem',
                         }}
                       >
                         {update.original_message}
@@ -529,53 +676,79 @@ const ManagerDashboard = ({ user, onLogout }) => {
         </Box>
       )}
 
-      {/* Tab 1: Q&A */}
+      {/* Tab 1: Query Agents */}
       {activeTab === 1 && (
         <Box>
           <Grid container spacing={3}>
-            {/* Worker Selection */}
+            {/* Agent Selection */}
             <Grid item xs={12} md={5}>
               <Paper
                 sx={{
-                  p: 3,
-                  background: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 2,
+                  p: { xs: 2, sm: 3 },
+                  background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.3) 100%)',
+                  border: '1px solid #1e3a5f',
+                  borderRadius: '3px',
                   height: '100%',
                 }}
               >
-                <Typography variant="h6" sx={{ mb: 2, color: 'var(--foreground)' }}>
-                  Select Workers
+                <Typography sx={{ 
+                  mb: 2, 
+                  color: '#e2e8f0',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}>
+                  Select Agents
                 </Typography>
 
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
                   <Button
                     variant={queryType === 'single' ? 'contained' : 'outlined'}
-                    startIcon={<Person />}
+                    startIcon={<Person sx={{ fontSize: 16 }} />}
                     onClick={() => setQueryType('single')}
-                    sx={{ mr: 1 }}
+                    size="small"
+                    sx={{
+                      fontFamily: '"JetBrains Mono", monospace',
+                      fontSize: '0.7rem',
+                      ...(queryType === 'single' && {
+                        background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+                      }),
+                    }}
                   >
                     Single
                   </Button>
                   <Button
                     variant={queryType === 'multiple' ? 'contained' : 'outlined'}
-                    startIcon={<Group />}
+                    startIcon={<Group sx={{ fontSize: 16 }} />}
                     onClick={() => setQueryType('multiple')}
+                    size="small"
+                    sx={{
+                      fontFamily: '"JetBrains Mono", monospace',
+                      fontSize: '0.7rem',
+                      ...(queryType === 'multiple' && {
+                        background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+                      }),
+                    }}
                   >
                     Multiple
                   </Button>
                 </Box>
 
                 {queryType === 'single' ? (
-                  <FormControl fullWidth>
-                    <InputLabel>Select Worker</InputLabel>
+                  <FormControl fullWidth size="small">
+                    <InputLabel sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.75rem' }}>
+                      Select Agent
+                    </InputLabel>
                     <Select
                       value={selectedWorker || ''}
                       onChange={(e) => setSelectedWorker(e.target.value)}
-                      label="Select Worker"
+                      label="Select Agent"
+                      sx={{ fontFamily: '"JetBrains Mono", monospace', fontSize: '0.75rem' }}
                     >
                       {workers.map((worker) => (
-                        <MenuItem key={worker.id} value={worker.id}>
+                        <MenuItem key={worker.id} value={worker.id} sx={{ fontSize: '0.75rem' }}>
                           {worker.name} - {worker.role}
                         </MenuItem>
                       ))}
@@ -590,10 +763,23 @@ const ManagerDashboard = ({ user, onLogout }) => {
                           <Checkbox
                             checked={selectedWorkers.includes(worker.id)}
                             onChange={() => toggleWorkerSelection(worker.id)}
+                            sx={{
+                              color: '#64748b',
+                              '&.Mui-checked': {
+                                color: '#dc2626',
+                              },
+                            }}
                           />
                         }
                         label={`${worker.name} (${worker.role})`}
-                        sx={{ display: 'block', color: 'var(--foreground)' }}
+                        sx={{ 
+                          display: 'block', 
+                          color: '#e2e8f0',
+                          '& .MuiFormControlLabel-label': {
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.75rem',
+                          },
+                        }}
                       />
                     ))}
                   </Box>
@@ -601,9 +787,17 @@ const ManagerDashboard = ({ user, onLogout }) => {
 
                 {queryType === 'multiple' && selectedWorkers.length > 0 && (
                   <Box sx={{ mt: 2 }}>
-                    <Typography variant="body2" sx={{ color: 'var(--muted-foreground)' }}>
-                      Selected: {selectedWorkers.length} workers
-                    </Typography>
+                    <Chip
+                      label={`${selectedWorkers.length} agents selected`}
+                      size="small"
+                      sx={{
+                        background: 'rgba(220, 38, 38, 0.15)',
+                        border: '1px solid rgba(220, 38, 38, 0.3)',
+                        color: '#fca5a5',
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.65rem',
+                      }}
+                    />
                   </Box>
                 )}
               </Paper>
@@ -613,60 +807,86 @@ const ManagerDashboard = ({ user, onLogout }) => {
             <Grid item xs={12} md={7}>
               <Paper
                 sx={{
-                  p: 3,
-                  background: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 2,
+                  p: { xs: 2, sm: 3 },
+                  background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.3) 100%)',
+                  border: '1px solid #1e3a5f',
+                  borderRadius: '3px',
                 }}
               >
-                <Typography variant="h6" sx={{ mb: 2, color: 'var(--foreground)' }}>
-                  Ask a Question
+                <Typography sx={{ 
+                  mb: 2, 
+                  color: '#e2e8f0',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}>
+                  Intelligence Query
                 </Typography>
 
                 <TextField
                   fullWidth
                   multiline
                   rows={3}
-                  placeholder="e.g., What progress was made on the electrical work this week?"
+                  placeholder="e.g., What surveillance activity was reported in Sector 7 this week?"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  sx={{ mb: 2 }}
+                  sx={{ 
+                    mb: 2,
+                    '& .MuiInputBase-input': {
+                      fontFamily: '"JetBrains Mono", monospace',
+                      fontSize: '0.8rem',
+                    },
+                  }}
                 />
 
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <Button
                     variant="contained"
-                    startIcon={<Send />}
+                    startIcon={<Send sx={{ fontSize: 16 }} />}
                     onClick={handleSubmitTextQuestion}
                     disabled={isProcessingQuery}
                     sx={{
-                      background: 'var(--primary)',
-                      '&:hover': { filter: 'brightness(1.1)' },
+                      fontFamily: '"JetBrains Mono", monospace',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.05em',
+                      background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                        boxShadow: '0 0 20px rgba(220, 38, 38, 0.4)',
+                      },
                     }}
                   >
-                    Ask Question
+                    Submit Query
                   </Button>
 
                   {!isRecordingQuestion ? (
                     <Button
                       variant="outlined"
-                      startIcon={<Mic />}
+                      startIcon={<Mic sx={{ fontSize: 16 }} />}
                       onClick={startVoiceQuestion}
                       disabled={isProcessingQuery}
+                      sx={{
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.75rem',
+                      }}
                     >
-                      Ask with Voice
+                      Voice Query
                     </Button>
                   ) : (
                     <Button
                       variant="contained"
-                      startIcon={<Stop />}
+                      startIcon={<Stop sx={{ fontSize: 16 }} />}
                       onClick={stopVoiceQuestion}
                       sx={{
-                        background: 'var(--destructive)',
-                        '&:hover': { filter: 'brightness(1.1)' },
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.75rem',
+                        background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                        animation: 'pulse 1.5s infinite',
                       }}
                     >
-                      Stop Recording
+                      End Recording
                     </Button>
                   )}
                 </Box>
@@ -677,31 +897,39 @@ const ManagerDashboard = ({ user, onLogout }) => {
                       variant="determinate"
                       value={audioLevel * 100}
                       sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: 'var(--muted)',
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(30, 58, 95, 0.5)',
                         '& .MuiLinearProgress-bar': {
-                          background: 'var(--primary)',
+                          background: 'linear-gradient(90deg, #dc2626, #f87171)',
                         },
                       }}
                     />
                     <Typography
-                      variant="body2"
-                      sx={{ mt: 1, color: 'var(--muted-foreground)' }}
+                      sx={{ 
+                        mt: 1, 
+                        color: '#fca5a5',
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.7rem',
+                      }}
                     >
-                      🎤 Recording your question...
+                      🔴 Recording intelligence query...
                     </Typography>
                   </Box>
                 )}
 
                 {isProcessingQuery && (
                   <Box sx={{ mt: 2, textAlign: 'center' }}>
-                    <CircularProgress size={24} sx={{ color: 'var(--primary)' }} />
+                    <CircularProgress size={28} sx={{ color: '#dc2626' }} />
                     <Typography
-                      variant="body2"
-                      sx={{ mt: 1, color: 'var(--muted-foreground)' }}
+                      sx={{ 
+                        mt: 1, 
+                        color: '#64748b',
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.7rem',
+                      }}
                     >
-                      Processing your question...
+                      Processing intelligence query...
                     </Typography>
                   </Box>
                 )}
@@ -712,12 +940,22 @@ const ManagerDashboard = ({ user, onLogout }) => {
                 <Card
                   sx={{
                     mt: 3,
-                    background: 'var(--card)',
-                    border: '2px solid var(--primary)',
-                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, #0f172a 0%, rgba(22, 163, 74, 0.1) 100%)',
+                    border: '2px solid #16a34a',
+                    borderRadius: '3px',
+                    position: 'relative',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '3px',
+                      height: '100%',
+                      background: '#16a34a',
+                    },
                   }}
                 >
-                  <CardContent>
+                  <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                     <Box
                       sx={{
                         display: 'flex',
@@ -726,13 +964,20 @@ const ManagerDashboard = ({ user, onLogout }) => {
                         mb: 2,
                       }}
                     >
-                      <Typography variant="h6" sx={{ color: 'var(--primary)', fontWeight: 700 }}>
-                        💬 Answer
+                      <Typography sx={{ 
+                        color: '#86efac', 
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                      }}>
+                        📡 Intelligence Response
                       </Typography>
                       {queryResult.answer_audio && (
                         <IconButton
                           onClick={() => playAudio(queryResult.answer_audio)}
-                          sx={{ color: 'var(--primary)' }}
+                          sx={{ color: '#16a34a' }}
                         >
                           <PlayArrow />
                         </IconButton>
@@ -742,14 +987,23 @@ const ManagerDashboard = ({ user, onLogout }) => {
                     {queryResult.transcribed_question && (
                       <Box sx={{ mb: 2 }}>
                         <Typography
-                          variant="subtitle2"
-                          sx={{ color: 'var(--muted-foreground)' }}
+                          sx={{ 
+                            color: '#64748b',
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.65rem',
+                            letterSpacing: '0.05em',
+                            textTransform: 'uppercase',
+                          }}
                         >
-                          Your question:
+                          Your Query:
                         </Typography>
                         <Typography
-                          variant="body2"
-                          sx={{ color: 'var(--foreground)', fontStyle: 'italic' }}
+                          sx={{ 
+                            color: '#94a3b8', 
+                            fontStyle: 'italic',
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.75rem',
+                          }}
                         >
                           "{queryResult.transcribed_question}"
                         </Typography>
@@ -757,27 +1011,40 @@ const ManagerDashboard = ({ user, onLogout }) => {
                     )}
 
                     <Typography
-                      variant="body1"
                       sx={{
-                        color: 'var(--foreground)',
+                        color: '#e2e8f0',
                         lineHeight: 1.8,
                         whiteSpace: 'pre-line',
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: '0.8rem',
                       }}
                     >
                       {queryResult.answer}
                     </Typography>
 
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       <Chip
-                        label={`${queryResult.updates_analyzed || 0} updates analyzed`}
+                        label={`${queryResult.updates_analyzed || 0} reports analyzed`}
                         size="small"
-                        sx={{ mr: 1, background: 'var(--accent)' }}
+                        sx={{ 
+                          background: 'rgba(30, 58, 95, 0.5)',
+                          border: '1px solid rgba(37, 99, 235, 0.3)',
+                          color: '#93c5fd',
+                          fontFamily: '"JetBrains Mono", monospace',
+                          fontSize: '0.6rem',
+                        }}
                       />
                       {queryResult.date_range && (
                         <Chip
-                          label={`${queryResult.date_range.start} to ${queryResult.date_range.end}`}
+                          label={`${queryResult.date_range.start} → ${queryResult.date_range.end}`}
                           size="small"
-                          sx={{ background: 'var(--accent)' }}
+                          sx={{ 
+                            background: 'rgba(30, 58, 95, 0.5)',
+                            border: '1px solid rgba(37, 99, 235, 0.3)',
+                            color: '#93c5fd',
+                            fontFamily: '"JetBrains Mono", monospace',
+                            fontSize: '0.6rem',
+                          }}
                         />
                       )}
                     </Box>
@@ -793,4 +1060,3 @@ const ManagerDashboard = ({ user, onLogout }) => {
 };
 
 export default ManagerDashboard;
-

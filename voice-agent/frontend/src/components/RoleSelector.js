@@ -12,9 +12,9 @@ import {
 } from '@mui/material';
 import {
   ArrowForward,
-  GraphicEq,
-  KeyboardVoice,
-  Headphones,
+  Security,
+  RecordVoiceOver,
+  Shield,
 } from '@mui/icons-material';
 import ConstructionApiService from '../services/ConstructionApi';
 
@@ -42,7 +42,7 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
 
   const handleLogin = async () => {
     if (!employeeId.trim()) {
-      setError('Please enter your Employee ID');
+      setError('Please enter your Badge ID');
       return;
     }
 
@@ -59,7 +59,7 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
           setIsNewUser(true);
         }
       } else {
-        // For managers, try to find or register
+        // For commanders, try to find or register
         try {
           const managers = await api.getAllManagers();
           const existingManager = managers.managers?.find(
@@ -79,7 +79,7 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
       if (err.message.includes('404')) {
         setIsNewUser(true);
       } else {
-        setError('Failed to login. Please try again.');
+        setError('Authentication failed. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -119,7 +119,7 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
         }
       }
     } catch (err) {
-      setError('Failed to register. Please try again.');
+      setError('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -137,66 +137,109 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
       }}
     >
       {/* Header */}
-      <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-          <GraphicEq sx={{ fontSize: { xs: 18, sm: 20 }, color: '#60a5fa' }} />
+      <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 5 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 1 }}>
+          <Shield sx={{ fontSize: { xs: 28, sm: 32 }, color: '#dc2626' }} />
           <Typography
             sx={{
-              fontWeight: 500,
-              color: '#c9d1d9',
-              letterSpacing: '0.04em',
-              fontSize: { xs: '0.9rem', sm: '1rem' },
+              fontFamily: '"JetBrains Mono", monospace',
+              fontWeight: 700,
+              color: '#e2e8f0',
+              letterSpacing: '0.15em',
+              fontSize: { xs: '1.5rem', sm: '1.75rem' },
+              textTransform: 'uppercase',
             }}
           >
-            AKORDI ECHO
+            SPYCHO
           </Typography>
         </Box>
-        <Typography sx={{ fontSize: '0.65rem', color: '#484f58', mt: 0.5 }}>
-          Voice Intelligence Platform
+        <Typography sx={{ 
+          fontSize: { xs: '0.65rem', sm: '0.7rem' }, 
+          color: '#64748b', 
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          fontFamily: '"JetBrains Mono", monospace',
+        }}>
+          Security Operations Platform
         </Typography>
+        <Box sx={{ 
+          mt: 2, 
+          display: 'inline-flex', 
+          alignItems: 'center', 
+          gap: 1,
+          px: 2,
+          py: 0.5,
+          background: 'rgba(220, 38, 38, 0.1)',
+          border: '1px solid rgba(220, 38, 38, 0.2)',
+          borderRadius: '2px',
+        }}>
+          <Box sx={{ 
+            width: 6, 
+            height: 6, 
+            borderRadius: '50%', 
+            background: '#16a34a',
+            boxShadow: '0 0 8px #16a34a',
+          }} />
+          <Typography sx={{ 
+            fontSize: '0.6rem', 
+            color: '#86efac',
+            fontFamily: '"JetBrains Mono", monospace',
+            letterSpacing: '0.1em',
+          }}>
+            SYSTEM ACTIVE
+          </Typography>
+        </Box>
       </Box>
 
       {!selectedRole ? (
-        // Role Selection - Mobile-First Enterprise Style
+        // Role Selection - Tactical Command Style
         <Box sx={{ 
           display: 'flex', 
-          gap: { xs: 1.5, sm: 2 }, 
+          gap: { xs: 2, sm: 2.5 }, 
           flexDirection: { xs: 'column', sm: 'row' },
           justifyContent: 'center', 
           width: '100%',
-          maxWidth: { xs: 280, sm: 420 },
+          maxWidth: { xs: 300, sm: 480 },
           px: { xs: 1, sm: 0 },
         }}>
-          {/* Operator Card */}
+          {/* Field Agent Card */}
           <Box
             onClick={() => handleRoleClick('worker')}
             sx={{
               cursor: 'pointer',
               position: 'relative',
-              width: { xs: '100%', sm: 180 },
-              height: { xs: 100, sm: 120 },
-              background: '#0a0d12',
-              border: '1px solid #1a2332',
-              borderRadius: '2px',
-              transition: 'all 0.2s ease',
+              width: { xs: '100%', sm: 210 },
+              height: { xs: 120, sm: 140 },
+              background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.4) 100%)',
+              border: '1px solid #1e3a5f',
+              borderRadius: '3px',
+              transition: 'all 0.25s ease',
               overflow: 'hidden',
               '&::before': {
                 content: '""',
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                width: '2px',
+                width: '3px',
                 height: '100%',
-                background: '#3b82f6',
-                opacity: 0.6,
+                background: 'linear-gradient(180deg, #dc2626, #991b1b)',
+                opacity: 0.7,
+              },
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#16a34a',
+                boxShadow: '0 0 6px #16a34a',
               },
               '&:hover': {
-                background: '#0d1117',
-                borderColor: '#2a3a4f',
-                '&::before': { opacity: 1 },
-              },
-              '&:active': {
-                background: '#0d1117',
+                background: 'linear-gradient(135deg, #0f172a 0%, rgba(220, 38, 38, 0.15) 100%)',
+                borderColor: '#dc2626',
+                boxShadow: '0 0 30px rgba(220, 38, 38, 0.2)',
                 '&::before': { opacity: 1 },
               },
             }}
@@ -207,70 +250,81 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
               flexDirection: 'column', 
               alignItems: 'center', 
               justifyContent: 'center',
-              p: { xs: 1.5, sm: 2 },
+              p: { xs: 2, sm: 2.5 },
             }}>
               <Box sx={{
-                width: { xs: 36, sm: 40 },
-                height: { xs: 36, sm: 40 },
-                borderRadius: '4px',
-                background: 'rgba(59, 130, 246, 0.1)',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
+                width: { xs: 44, sm: 48 },
+                height: { xs: 44, sm: 48 },
+                borderRadius: '50%',
+                background: 'rgba(220, 38, 38, 0.15)',
+                border: '1px solid rgba(220, 38, 38, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                mb: 1,
+                mb: 1.5,
               }}>
-                <KeyboardVoice sx={{ fontSize: { xs: 18, sm: 20 }, color: '#60a5fa' }} />
+                <RecordVoiceOver sx={{ fontSize: { xs: 22, sm: 24 }, color: '#fca5a5' }} />
               </Box>
               
               <Typography sx={{ 
-                fontWeight: 500, 
-                fontSize: { xs: '0.75rem', sm: '0.8rem' }, 
-                color: '#c9d1d9',
-                letterSpacing: '0.02em',
-                mb: 0.25,
+                fontFamily: '"JetBrains Mono", monospace',
+                fontWeight: 600, 
+                fontSize: { xs: '0.8rem', sm: '0.85rem' }, 
+                color: '#e2e8f0',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                mb: 0.5,
               }}>
-                Operator
+                Field Agent
               </Typography>
               <Typography sx={{ 
                 fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
-                color: '#586069',
+                color: '#64748b',
+                fontFamily: '"JetBrains Mono", monospace',
               }}>
-                Submit voice updates
+                Submit Intel Reports
               </Typography>
             </Box>
           </Box>
 
-          {/* Manager Card */}
+          {/* Commander Card */}
           <Box
             onClick={() => handleRoleClick('manager')}
             sx={{
               cursor: 'pointer',
               position: 'relative',
-              width: { xs: '100%', sm: 180 },
-              height: { xs: 100, sm: 120 },
-              background: '#0a0d12',
-              border: '1px solid #1a2332',
-              borderRadius: '2px',
-              transition: 'all 0.2s ease',
+              width: { xs: '100%', sm: 210 },
+              height: { xs: 120, sm: 140 },
+              background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.4) 100%)',
+              border: '1px solid #1e3a5f',
+              borderRadius: '3px',
+              transition: 'all 0.25s ease',
               overflow: 'hidden',
               '&::before': {
                 content: '""',
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                width: '2px',
+                width: '3px',
                 height: '100%',
-                background: '#8b5cf6',
-                opacity: 0.6,
+                background: 'linear-gradient(180deg, #2563eb, #1e40af)',
+                opacity: 0.7,
+              },
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#16a34a',
+                boxShadow: '0 0 6px #16a34a',
               },
               '&:hover': {
-                background: '#0d1117',
-                borderColor: '#2a3a4f',
-                '&::before': { opacity: 1 },
-              },
-              '&:active': {
-                background: '#0d1117',
+                background: 'linear-gradient(135deg, #0f172a 0%, rgba(37, 99, 235, 0.15) 100%)',
+                borderColor: '#2563eb',
+                boxShadow: '0 0 30px rgba(37, 99, 235, 0.2)',
                 '&::before': { opacity: 1 },
               },
             }}
@@ -281,62 +335,95 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
               flexDirection: 'column', 
               alignItems: 'center', 
               justifyContent: 'center',
-              p: { xs: 1.5, sm: 2 },
+              p: { xs: 2, sm: 2.5 },
             }}>
               <Box sx={{
-                width: { xs: 36, sm: 40 },
-                height: { xs: 36, sm: 40 },
-                borderRadius: '4px',
-                background: 'rgba(139, 92, 246, 0.1)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
+                width: { xs: 44, sm: 48 },
+                height: { xs: 44, sm: 48 },
+                borderRadius: '50%',
+                background: 'rgba(37, 99, 235, 0.15)',
+                border: '1px solid rgba(37, 99, 235, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                mb: 1,
+                mb: 1.5,
               }}>
-                <Headphones sx={{ fontSize: { xs: 18, sm: 20 }, color: '#a78bfa' }} />
+                <Security sx={{ fontSize: { xs: 22, sm: 24 }, color: '#93c5fd' }} />
               </Box>
               
               <Typography sx={{ 
-                fontWeight: 500, 
-                fontSize: { xs: '0.75rem', sm: '0.8rem' }, 
-                color: '#c9d1d9',
-                letterSpacing: '0.02em',
-                mb: 0.25,
+                fontFamily: '"JetBrains Mono", monospace',
+                fontWeight: 600, 
+                fontSize: { xs: '0.8rem', sm: '0.85rem' }, 
+                color: '#e2e8f0',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                mb: 0.5,
               }}>
-                Manager
+                Commander
               </Typography>
               <Typography sx={{ 
                 fontSize: { xs: '0.6rem', sm: '0.65rem' }, 
-                color: '#586069',
+                color: '#64748b',
+                fontFamily: '"JetBrains Mono", monospace',
               }}>
-                Review & query updates
+                Command & Query Intel
               </Typography>
             </Box>
           </Box>
         </Box>
       ) : (
-        // Login Form - Mobile Optimized
+        // Login Form - Tactical Security Style
         <Fade in={true}>
           <Card
             sx={{
-              maxWidth: { xs: 300, sm: 340 },
+              maxWidth: { xs: 320, sm: 360 },
               width: '100%',
               mx: { xs: 2, sm: 0 },
-              background: '#0a0d12',
-              border: '1px solid #1a2332',
-              borderRadius: '2px',
+              background: 'linear-gradient(135deg, #0f172a 0%, rgba(30, 58, 95, 0.3) 100%)',
+              border: '1px solid #1e3a5f',
+              borderRadius: '3px',
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '3px',
+                height: '100%',
+                background: selectedRole === 'worker' 
+                  ? 'linear-gradient(180deg, #dc2626, #991b1b)'
+                  : 'linear-gradient(180deg, #2563eb, #1e40af)',
+              },
             }}
           >
-            <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-              <Box sx={{ textAlign: 'center', mb: { xs: 2, sm: 2.5 } }}>
+            <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+              <Box sx={{ textAlign: 'center', mb: { xs: 2.5, sm: 3 } }}>
                 {selectedRole === 'worker' ? (
-                  <KeyboardVoice sx={{ fontSize: { xs: 22, sm: 24 }, color: '#60a5fa' }} />
+                  <RecordVoiceOver sx={{ fontSize: { xs: 28, sm: 32 }, color: '#fca5a5' }} />
                 ) : (
-                  <Headphones sx={{ fontSize: { xs: 22, sm: 24 }, color: '#a78bfa' }} />
+                  <Security sx={{ fontSize: { xs: 28, sm: 32 }, color: '#93c5fd' }} />
                 )}
-                <Typography sx={{ mt: 1, fontWeight: 500, color: '#c9d1d9', fontSize: { xs: '0.8rem', sm: '0.85rem' } }}>
-                  {isNewUser ? 'Register' : 'Sign In'} as {selectedRole === 'worker' ? 'Operator' : 'Manager'}
+                <Typography sx={{ 
+                  mt: 1.5, 
+                  fontFamily: '"JetBrains Mono", monospace',
+                  fontWeight: 600, 
+                  color: '#e2e8f0', 
+                  fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                }}>
+                  {isNewUser ? 'Register' : 'Authenticate'} as {selectedRole === 'worker' ? 'Field Agent' : 'Commander'}
+                </Typography>
+                <Typography sx={{ 
+                  mt: 0.5, 
+                  fontSize: '0.65rem', 
+                  color: '#64748b',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  letterSpacing: '0.1em',
+                }}>
+                  SECURE ACCESS REQUIRED
                 </Typography>
               </Box>
 
@@ -348,12 +435,13 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
 
               <TextField
                 fullWidth
-                label="Employee ID"
+                label="Badge ID"
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 sx={{ mb: 2 }}
                 size="small"
                 disabled={isNewUser}
+                placeholder="Enter your badge number"
               />
 
               {isNewUser && (
@@ -368,22 +456,22 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
                   />
                   <TextField
                     fullWidth
-                    label="Site Location"
+                    label="Assignment Location"
                     value={siteLocation}
                     onChange={(e) => setSiteLocation(e.target.value)}
                     sx={{ mb: 2 }}
                     size="small"
-                    placeholder="e.g., Downtown Tower Project"
+                    placeholder="e.g., Sector 7, Downtown Division"
                   />
                   {selectedRole === 'worker' && (
                     <TextField
                       fullWidth
-                      label="Role/Trade"
+                      label="Specialization"
                       value={workerRole}
                       size="small"
                       onChange={(e) => setWorkerRole(e.target.value)}
                       sx={{ mb: 2 }}
-                      placeholder="e.g., Electrician, Mason, Foreman"
+                      placeholder="e.g., Surveillance, Patrol, Investigation"
                     />
                   )}
                 </>
@@ -397,16 +485,24 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
                 disabled={isLoading}
                 endIcon={isLoading ? <CircularProgress size={16} /> : <ArrowForward sx={{ fontSize: 16 }} />}
                 sx={{
-                  py: { xs: 1, sm: 1.25 },
+                  py: { xs: 1.25, sm: 1.5 },
                   fontSize: { xs: '0.75rem', sm: '0.8rem' },
-                  background: '#3b82f6',
-                  color: '#ffffff',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  letterSpacing: '0.08em',
+                  background: selectedRole === 'worker'
+                    ? 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)'
+                    : 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
                   '&:hover': {
-                    background: '#2563eb',
+                    background: selectedRole === 'worker'
+                      ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                      : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    boxShadow: selectedRole === 'worker'
+                      ? '0 0 25px rgba(220, 38, 38, 0.4)'
+                      : '0 0 25px rgba(37, 99, 235, 0.4)',
                   },
                 }}
               >
-                {isLoading ? 'Please wait...' : isNewUser ? 'Register' : 'Continue'}
+                {isLoading ? 'Authenticating...' : isNewUser ? 'Register' : 'Access System'}
               </Button>
 
               <Button
@@ -420,9 +516,18 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
                     setSelectedRole(null);
                   }
                 }}
-                sx={{ mt: 1.5, color: '#484f58', fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                sx={{ 
+                  mt: 2, 
+                  color: '#64748b', 
+                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                  fontFamily: '"JetBrains Mono", monospace',
+                  '&:hover': {
+                    color: '#94a3b8',
+                    background: 'transparent',
+                  },
+                }}
               >
-                {isNewUser ? 'Back to Login' : 'Choose Different Role'}
+                {isNewUser ? '← Back to Login' : '← Select Different Role'}
               </Button>
             </CardContent>
           </Card>
@@ -433,4 +538,3 @@ const RoleSelector = ({ onRoleSelect, onUserLogin }) => {
 };
 
 export default RoleSelector;
-

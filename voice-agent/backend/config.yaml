@@ -1,7 +1,7 @@
-# Echo Configuration
+# SpyCho Configuration
 app:
-  name: "Echo"
-  version: "1.0.0"
+  name: "SpyCho"
+  version: "2.0.0"
   debug: true
 
 server:
@@ -41,7 +41,7 @@ websocket:
 logging:
   level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  file: "logs/voice_agent.log"
+  file: "logs/spycho.log"
 
 audio:
   sample_rate: 16000

@@ -1,6 +1,6 @@
 """
-Construction Site Voice Agent - Main FastAPI Application
-Supports daily updates from site workers and Q&A for site managers
+SpyCho - Police Investigation Security Operations Platform
+Voice-based intelligence reporting system for field agents and commanders
 """
 from fastapi import FastAPI, WebSocket, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,8 +35,8 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Construction Site Voice Agent API",
-    description="Voice-based daily reporting system for construction sites. Workers submit updates, managers review and query.",
+    title="SpyCho Security Operations API",
+    description="Voice-based intelligence reporting system for security operations. Field agents submit intel reports, commanders review and query.",
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -81,14 +81,14 @@ async def startup_event():
     init_worker_services(stt_service, tts_service, llm_service)
     init_manager_services(stt_service, tts_service, llm_service)
 
-    logger.info("Construction Site Voice Agent started")
+    logger.info("SpyCho Security Operations Platform started")
     logger.info("All services initialized successfully")
     logger.info("API Documentation available at /docs")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup services on shutdown"""
-    logger.info("Shutting down Voice Agent backend...")
+    logger.info("Shutting down SpyCho backend...")
 
     try:
         # Clean up Whisper model resources
@@ -121,7 +121,7 @@ async def shutdown_event():
     except Exception as e:
         logger.error(f"Error during shutdown cleanup: {e}")
 
-    logger.info("Voice Agent backend shutdown complete")
+    logger.info("SpyCho backend shutdown complete")
 
 # ============================================
 # ROOT ENDPOINTS
@@ -130,13 +130,13 @@ async def shutdown_event():
 @app.get("/")
 async def root():
     return {
-        "message": "Construction Site Voice Agent API",
+        "message": "SpyCho Security Operations API",
         "version": "2.0.0",
-        "status": "running",
+        "status": "operational",
         "features": {
-            "worker_updates": "/api/worker - Submit and view daily updates",
-            "manager_queries": "/api/manager - Review updates and ask questions",
-            "legacy_echo": "/api/voice - Original Echo voice assistant"
+            "field_agent_reports": "/api/worker - Submit and view intel reports",
+            "commander_queries": "/api/manager - Review reports and query intelligence",
+            "legacy_terminal": "/api/voice - Legacy voice terminal"
         },
         "documentation": "/docs"
     }
@@ -145,26 +145,26 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {
-        "status": "healthy",
+        "status": "operational",
         "services": {
             "stt": "ready",
             "llm": "ready",
             "tts": "ready"
         },
         "features": {
-            "worker_updates": "active",
-            "manager_queries": "active"
+            "field_reports": "active",
+            "intelligence_queries": "active"
         }
     }
 
 # ============================================
-# LEGACY ECHO ENDPOINTS (preserved for compatibility)
+# LEGACY VOICE TERMINAL ENDPOINTS
 # ============================================
 
 @app.post("/api/voice/process")
 async def process_voice_audio(file: UploadFile = File(...)):
     """
-    Process uploaded voice audio file (Legacy Echo endpoint)
+    Process uploaded voice audio file (Legacy terminal endpoint)
     Returns transcribed text and LLM response
     """
     try:
@@ -237,7 +237,7 @@ async def process_voice_audio(file: UploadFile = File(...)):
 
 @app.get("/api/conversations")
 async def get_conversations(limit: int = 10, offset: int = 0):
-    """Get conversation history (Legacy Echo endpoint)"""
+    """Get conversation history (Legacy terminal endpoint)"""
     try:
         conversations = get_recent_conversations(limit=limit, offset=offset)
         return {"conversations": [conv.to_dict() for conv in conversations]}
@@ -251,21 +251,21 @@ async def get_conversations(limit: int = 10, offset: int = 0):
 
 @app.get("/api/sites")
 async def list_sites():
-    """List all construction sites"""
+    """List all operational sectors"""
     from .database.models import get_unique_sites
     sites = get_unique_sites()
     return {"sites": sites, "total": len(sites)}
 
 @app.get("/api/workers")
 async def list_workers():
-    """List all site workers"""
+    """List all field agents"""
     from .database.models import get_all_site_workers
     workers = get_all_site_workers()
     return {"workers": [w.to_dict() for w in workers], "total": len(workers)}
 
 @app.get("/api/updates/today")
 async def get_today_updates():
-    """Get all updates submitted today"""
+    """Get all intel reports submitted today"""
     from .database.models import get_todays_updates
     updates = get_todays_updates()
     return {
@@ -275,7 +275,7 @@ async def get_today_updates():
     }
 
 # ============================================
-# WEBSOCKET (Legacy Echo)
+# WEBSOCKET (Legacy Terminal)
 # ============================================
 
 @app.websocket("/ws/voice")
