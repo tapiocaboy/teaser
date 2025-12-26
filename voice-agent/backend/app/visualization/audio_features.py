@@ -200,6 +200,31 @@ class AudioFeatureExtractor:
                 hop_length=self.hop_length
             )
             
+            # Additional spectral features for enhanced visualization
+            try:
+                # Spectral bandwidth (spread)
+                spectral_bandwidth = librosa.feature.spectral_bandwidth(
+                    y=audio_data,
+                    sr=self.sample_rate,
+                    n_fft=effective_n_fft,
+                    hop_length=self.hop_length
+                )
+                spectral_bandwidth_mean = float(np.mean(spectral_bandwidth))
+                spectral_spread = min(spectral_bandwidth_mean / (self.sample_rate / 4), 1.0)
+            except:
+                spectral_spread = 0.5
+            
+            try:
+                # Spectral flatness (tonality - inverse)
+                spectral_flatness = librosa.feature.spectral_flatness(
+                    y=audio_data,
+                    n_fft=effective_n_fft,
+                    hop_length=self.hop_length
+                )
+                tonality = 1.0 - float(np.mean(spectral_flatness))  # Higher = more tonal
+            except:
+                tonality = 0.5
+            
             # Average over time frames
             mfcc_mean = np.mean(mfcc, axis=1)
             mfcc_delta_mean = np.mean(mfcc_delta, axis=1)
@@ -232,7 +257,11 @@ class AudioFeatureExtractor:
                 'rms': float(rms_smoothed),
                 'centroid': float(centroid_smoothed),
                 'mfcc': mfcc_mean.tolist(),
-                'feature_dim': self.feature_dim
+                'feature_dim': self.feature_dim,
+                'spectral_spread': float(spectral_spread),
+                'tonality': float(tonality),
+                'zcr': float(np.mean(zcr)),
+                'rolloff': float(rolloff_normalized)
             }
             
         except Exception as e:

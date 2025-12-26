@@ -105,7 +105,11 @@ class VisualizationService {
             centroid: data.centroid,
             isTrained: data.is_trained,
             trainingProgress: data.training_progress,
-            timestamp: data.timestamp
+            timestamp: data.timestamp,
+            spectralSpread: data.spectral_spread || 0.5,
+            tonality: data.tonality || 0.5,
+            zcr: data.zcr || 0,
+            rolloff: data.rolloff || 0.5
           });
         }
         break;

@@ -28,6 +28,10 @@ class VisualizationFrame:
     centroid: float
     is_trained: bool
     training_progress: float
+    spectral_spread: float = 0.5
+    tonality: float = 0.5
+    zcr: float = 0.0
+    rolloff: float = 0.5
     
     def to_dict(self) -> Dict:
         return {
@@ -36,7 +40,11 @@ class VisualizationFrame:
             'rms': self.rms,
             'centroid': self.centroid,
             'is_trained': self.is_trained,
-            'training_progress': self.training_progress
+            'training_progress': self.training_progress,
+            'spectral_spread': self.spectral_spread,
+            'tonality': self.tonality,
+            'zcr': self.zcr,
+            'rolloff': self.rolloff
         }
     
     def to_json(self) -> str:
@@ -185,9 +193,9 @@ class VisualizationService:
         # Get projector status
         status = self.umap_projector.get_status()
         
-        # Add training sample if not trained (very low threshold for sensitivity)
+        # Add training sample if not trained (extremely low threshold for max sensitivity)
         if not status['is_trained'] and not status['is_training']:
-            if features['rms'] > 0.001:  # Very low threshold to capture quiet audio
+            if features['rms'] > 0.0001:  # Extremely low threshold to capture any audio
                 self.umap_projector.add_training_sample(feature_vector)
                 status = self.umap_projector.get_status()
         
@@ -202,7 +210,11 @@ class VisualizationService:
             rms=features['rms'],
             centroid=features['centroid'],
             is_trained=status['is_trained'],
-            training_progress=status['progress']
+            training_progress=status['progress'],
+            spectral_spread=features.get('spectral_spread', 0.5),
+            tonality=features.get('tonality', 0.5),
+            zcr=features.get('zcr', 0.0),
+            rolloff=features.get('rolloff', 0.5)
         )
     
     def get_status(self) -> Dict:
