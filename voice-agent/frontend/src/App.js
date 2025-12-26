@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Link } from 'react-router-dom';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Container, Box, Button } from '@mui/material';
 import VoiceInterface from './components/VoiceInterface';
 import RoleSelector from './components/RoleSelector';
 import WorkerInterface from './components/WorkerInterface';
 import ManagerDashboard from './components/ManagerDashboard';
+import AudioVisualizer3D from './components/AudioVisualizer3D';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './themes.css';
 import './App.css';
@@ -300,7 +302,7 @@ function createSecurityTheme() {
   });
 }
 
-// App modes
+// App modes for main app navigation
 const APP_MODES = {
   ROLE_SELECT: 'role_select',
   WORKER: 'worker',
@@ -308,12 +310,11 @@ const APP_MODES = {
   LEGACY_ECHO: 'legacy_echo',
 };
 
-function AppContent() {
+// Main App Content (role selection and operations)
+function MainAppContent() {
   const [appMode, setAppMode] = useState(APP_MODES.ROLE_SELECT);
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
-  
-  const muiTheme = useMemo(() => createSecurityTheme(), []);
 
   const handleRoleSelect = (role) => {
     setUserRole(role);
@@ -344,14 +345,38 @@ function AppContent() {
               onRoleSelect={handleRoleSelect}
               onUserLogin={handleUserLogin}
             />
+            {/* Option to use visualizer - Link to /visualize */}
+            <Box sx={{ textAlign: 'center', mt: 4, pb: 2 }}>
+              <Button
+                component={Link}
+                to="/visualize"
+                variant="outlined"
+                sx={{ 
+                  color: '#93c5fd', 
+                  borderColor: '#2563eb',
+                  fontSize: '0.75rem',
+                  fontFamily: '"JetBrains Mono", monospace',
+                  letterSpacing: '0.05em',
+                  px: 3,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    color: '#e2e8f0',
+                    borderColor: '#3b82f6',
+                    background: 'rgba(37, 99, 235, 0.1)',
+                  },
+                }}
+              >
+                🎵 Audio UMAP Visualizer
+              </Button>
+            </Box>
             {/* Option to use legacy mode */}
-            <Box sx={{ textAlign: 'center', mt: 4, pb: 4 }}>
+            <Box sx={{ textAlign: 'center', pb: 4 }}>
               <Button
                 variant="text"
                 onClick={handleSwitchToLegacy}
                 sx={{ 
                   color: '#64748b', 
-                  fontSize: '0.75rem',
+                  fontSize: '0.7rem',
                   fontFamily: '"JetBrains Mono", monospace',
                   letterSpacing: '0.05em',
                   '&:hover': {
@@ -398,6 +423,38 @@ function AppContent() {
     }
   };
 
+  return renderContent();
+}
+
+// Visualizer Page Component
+function VisualizerPage() {
+  return (
+    <Box>
+      <Box sx={{ textAlign: 'right', mb: 2 }}>
+        <Button
+          component={Link}
+          to="/"
+          variant="outlined"
+          sx={{
+            borderColor: '#1e3a5f',
+            color: '#e2e8f0',
+            fontFamily: '"JetBrains Mono", monospace',
+            fontSize: '0.75rem',
+            textDecoration: 'none',
+          }}
+        >
+          ← Back to Operations
+        </Button>
+      </Box>
+      <AudioVisualizer3D />
+    </Box>
+  );
+}
+
+// Layout wrapper with theme
+function AppLayout({ children }) {
+  const muiTheme = useMemo(() => createSecurityTheme(), []);
+
   return (
     <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
@@ -412,7 +469,7 @@ function AppContent() {
             zIndex: 1,
           }}
         >
-          {renderContent()}
+          {children}
         </Box>
       </Container>
     </MuiThemeProvider>
@@ -422,7 +479,14 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <Router>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<MainAppContent />} />
+            <Route path="/visualize" element={<VisualizerPage />} />
+          </Routes>
+        </AppLayout>
+      </Router>
     </ThemeProvider>
   );
 }

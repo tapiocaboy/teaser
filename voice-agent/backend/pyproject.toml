@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "voice-agent-backend"
 version = "0.1.0"
-description = "Echo Backend API"
+description = "SpyCho Backend API"
 authors = ["Echo Team <team@echo.com>"]
 readme = "README.md"
 package-mode = false
@@ -19,6 +19,9 @@ alembic = "*"
 pydub = "*"
 numpy = "*"
 scipy = "*"
+librosa = "*"
+umap-learn = "*"
+scikit-learn = "*"
 python-multipart = "*"
 pydantic = "*"
 python-dotenv = "*"

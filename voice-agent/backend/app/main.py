@@ -22,6 +22,7 @@ from .websocket.manager import WebSocketManager
 # Import routers
 from .routers.worker import router as worker_router, init_worker_services
 from .routers.manager import router as manager_router, init_manager_services
+from .routers.visualization import router as visualization_router
 
 import yaml
 
@@ -66,6 +67,7 @@ ws_manager = WebSocketManager()
 # Include routers
 app.include_router(worker_router)
 app.include_router(manager_router)
+app.include_router(visualization_router)
 
 @app.on_event("startup")
 async def startup_event():

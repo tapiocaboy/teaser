@@ -20,6 +20,11 @@ alembic
 pydub
 numpy
 scipy
+librosa
+
+# Visualization
+umap-learn
+scikit-learn
 
 # Utilities
 python-multipart
